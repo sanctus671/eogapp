@@ -3,7 +3,7 @@ import { AuthProvider } from './app/context/AuthContext';
 
 
 
-import { Navigation } from './app/screens/Navigation';
+import { Navigation } from './app/navigation/Navigation';
 import { useEffect, useState } from 'react';
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -24,7 +24,11 @@ export default function App() {
 
       setAppReady(true);
 
+      //delay for storage load
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       await SplashScreen.hideAsync();
+
     }
     
     loadFont();
@@ -34,7 +38,7 @@ export default function App() {
   return (
     <AuthProvider>
       {
-        (appReady ? <Navigation></Navigation> : <Text>Loading</Text>)
+        (appReady ? <Navigation></Navigation> : <Text></Text>)
       }
     </AuthProvider>
   );

@@ -1,17 +1,20 @@
 import {createContext, useContext, useEffect, useState} from 'react';
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import environment from "../constants/environment";
 
 interface AuthProps {
 	authState?: { token: string | null; authenticated: boolean | null, ready: boolean | null};
-	onRegister?: (email: string, password: string) => Promise<any>;
+	onRegister?: (name:string, email: string, password: string) => Promise<any>;
+	onRegisterAnonymous?: () => Promise<any>;
 	onLogin?: (email: string, password: string) => Promise<any>;
+	onResetPassword?: (email: string) => Promise<any>;
 	onLogout?: () => Promise<any>;
 }
 
 
 const TOKEN_KEY = 'eog_token';
-export const API_URL = 'http://website.localhost/eogapp/api/public/api';
+const API_URL = environment.API_URL;
 const AuthContext = createContext<AuthProps>({});
 
 
@@ -34,23 +37,28 @@ export const AuthProvider = ({children}:any) => {
 	
 	useEffect(() => {
 		const loadToken = async () => {
-			const token = await SecureStore.getItemAsync(TOKEN_KEY);
-			console.log("stored:", token);
-			
-			if (token){
-			
-				axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-			
-				setAuthState(
-					{
-						token: token,
-						authenticated: true,
-						ready:true
-					}
-				);
-			
+			try{
+
+				const token = await SecureStore.getItemAsync(TOKEN_KEY);
+				console.log("stored:", token);
+				
+				if (token){
+				
+					axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+				
+					setAuthState(
+						{
+							token: token,
+							authenticated: true,
+							ready:true
+						}
+					);
+				
+				}
+
 			}
-			else{
+			finally{
+				console.log("here");
 				setAuthState(
 					{
 						token: null,
@@ -60,8 +68,25 @@ export const AuthProvider = ({children}:any) => {
 				);
 			}
 		}
+		loadToken();
 		
 	}, []	)
+
+	const storeToken = async (token:string) => {
+		setAuthState(
+			{
+				token: token,
+				authenticated: true,
+				ready:true
+			}
+		);
+		
+		
+		axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+		
+		
+		await SecureStore.setItemAsync(TOKEN_KEY, token);		
+	}
 
 
 	const login = async (email:string, password: string) => {
@@ -69,44 +94,71 @@ export const AuthProvider = ({children}:any) => {
 		try {
 			const result =  await axios.post(`${API_URL}/login`, {email, password});
 			
-			setAuthState(
-				{
-					token: result.data.token,
-					authenticated: true,
-					ready:true
-				}
-			);
-			
-			
-			axios.defaults.headers.common['Authorization'] = `Bearer ${result.data.token}`;
-			
-			
-			await SecureStore.setItemAsync(TOKEN_KEY, result.data.token);
+
+			storeToken(result.data.token);
 			
 			return result;
 			
 			
 			
 		} catch(e) {
-			return {error: true, msg: (e as any).response.data.msg };
+			console.log(e);
+			return {error: true, msg: (e as any).message };
 		}
 		
 	
 	};
-	
-	
-	const register = async (email:string, password: string) => {
+
+
+	const resetPassword = async (email:string) => {
 		
 		try {
-			return await axios.post(`${API_URL}/signup`, {email, password});
+			return await axios.post(`${API_URL}/recovery`, {email});
 		
 		} catch(e) {
-			return {error: true, msg: (e as any).response.data.msg };
+			return {error: true, msg: (e as any).message };
 		}
 		
 	
 	};
+
+
 	
+	
+	const register = async (name:string, email:string, password: string) => {
+		
+		try {
+			const result = await axios.post(`${API_URL}/signup`, {email, password});
+
+			storeToken(result.data.token);
+
+			return result;
+
+		
+		} catch(e) {
+			return {error: true, msg: (e as any).message };
+		}
+		
+	
+	};
+
+	
+	const registerAnonymous = async () => {
+		
+		try {
+			const result = await axios.post(`${API_URL}/signupanonymous`, {});
+
+			storeToken(result.data.token);
+
+			return result;
+		
+		} catch(e) {
+			return {error: true, msg: (e as any).message };
+		}
+		
+	
+	};
+
 	
 	const logout = async () => {
 		await SecureStore.deleteItemAsync(TOKEN_KEY);
@@ -125,8 +177,10 @@ export const AuthProvider = ({children}:any) => {
 
 	const value = {
 		onRegister: register,
+		onRegisterAnonymous: registerAnonymous,
 		onLogin: login,
 		onLogout: logout,
+		onResetPassword: resetPassword,
 		authState
 	
 	};
