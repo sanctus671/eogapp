@@ -7,8 +7,8 @@ import { useNavigation } from '@react-navigation/native';
 const colorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
 import { Ionicons } from '@expo/vector-icons';
 
-//hard coded data for iOS testing as API isn't live yet
-const DATA = [
+//TODO hard coded data for iOS testing as API isn't live yet
+const DATA = [ 
   {
     id: '1',
     name: 'Fallout v3',
@@ -91,7 +91,8 @@ const Search = () => {
     navigation.setOptions({
       headerSearchBarOptions: {
         onChangeText: (event:any) => setSearch(event.nativeEvent.text),
-        barTintColor:theme.colors[colorScheme].searchBarBackground, tintColor:theme.colors.white, textColor: theme.colors[colorScheme].black, headerIconColor: theme.colors[colorScheme].lightgrey
+        barTintColor:theme.colors[colorScheme].searchBarBackground, tintColor:theme.colors.white, textColor: theme.colors[colorScheme].black, headerIconColor: theme.colors[colorScheme].lightgrey,
+        placeholder: "Search rules"
       },
     });
   }, [navigation]);
@@ -108,7 +109,8 @@ const Search = () => {
         data={dataFiltered}
         renderItem={({item}) => {
           return (
-            <TouchableOpacity style={{...styles.item, height: (segmentIndex === 0 ? 180 : "auto")}} activeOpacity={.8}>
+            <TouchableOpacity style={{...styles.item, height: (segmentIndex === 0 ? 180 : "auto")}} activeOpacity={.8} 
+            onPress={() => navigation.navigate("Game" as never, {id:1, name: item.name, owned:item.owned} as never)}>
               <View style={{...styles.itemImage, display:(segmentIndex === 0 ? "flex" : "none")}} >
                 <ImageBackground source={{ uri: item.bannerImage}} resizeMode="cover" style={{...styles.itemImage }}></ImageBackground>
                 <View style={{...styles.itemListOwned, right:15, bottom:15, display: (item.owned ? "flex" : "none")}}>

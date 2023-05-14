@@ -26,7 +26,7 @@ export const Navigation = () => {
 
   
     return (<NavigationContainer>
-        <Stack.Navigator screenOptions={{headerLargeTitleStyle:{fontFamily:theme.fonts.headings, color: theme.colors.white}, headerLargeTitle:true, headerLargeStyle: {backgroundColor:'#C0AB99'}, 
+        <Stack.Navigator screenOptions={{headerLargeTitleStyle:{fontFamily:theme.fonts.headings, color: theme.colors.white}, headerLargeTitle:true, headerLargeStyle: {backgroundColor:theme.colors.primary}, 
               headerStyle: {backgroundColor:theme.colors.primary}, headerTitleStyle:{color:theme.colors.white}, headerTransparent: true, headerTintColor: theme.colors.white}}>
   
           { authState?.authenticated || true ? 
