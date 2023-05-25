@@ -1,46 +1,32 @@
-import { Appearance, ImageBackground, StyleSheet, Text, View, Image, Linking, Platform, TouchableOpacity, ScrollView } from 'react-native'
+import { Appearance, ImageBackground, StyleSheet, Text, View, Image, Linking, Platform, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { useRoute } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import theme from '../constants/theme';
+import theme from '../../constants/theme';
+import * as gameService from '../../services/GameService';
 const colorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
+import * as purchaseService from '../../services/PurchaseService';
 
-type RouteParams = {
-    id: number;
-    name: string;
-    owned: boolean;
-  };
-
-  type NavProps = {
-    navigation: NativeStackNavigationProp<{}>;
-  };
 
   type GameProps = {
-    id?:number; 'name':string; 'owned':boolean; 'description'?:string; 'price_tier'?: string; 'rules_file'?: string; 'banner_image'?: string; 'description_image'?: string; 
+    id?:number; 'name'?:string; 'owned'?:boolean; 'description'?:string; 'price_tier'?: string; 'rules_file'?: string; 'banner_image'?: string; 'description_image'?: string; 
     'designers'?:string; 'artist'?:string; 'publisher'?: string; 'year_published'?:string; 'number_of_players'?:string; 'ages'?:string; 'playing_time'?:string; 
-    'website'?: string; 'notes'?:string; 'created_at'?: Date; 'updated_at'?: Date; 
+    'website'?: string; 'notes'?:string; 'created_at'?: Date; 'updated_at'?: Date; 'game_rules'?: any;
   }
 
 
 
-const Game = ({ navigation }: NavProps) => {
+const GamePurchase = ({ id }: {id: number}) => {
 
-    const route = useRoute();
-    const { id, name, owned } = route.params as RouteParams;
+
     const productId = "com.eogapp.app.game"; //TODO update with product data once inapp products are created
     const priceTiers:any = {
         "tier1" : "$1.99",
         "tier2" : "$2.99",
         "tier3" : "$3.99"
     }
-
+    const [loading, setLoading] = useState(true);
 
     const [game, setGame] = useState<GameProps>({
-        id: id,
-        name: name,
-        owned: owned,
-        created_at: new Date(),
-        updated_at: new Date()
+        id: id
     });
 
     const openWebsite = (url?:string) => {
@@ -49,42 +35,23 @@ const Game = ({ navigation }: NavProps) => {
         }
       };
 
-
-    useEffect(() => {
-        // Update the stack header options when the component mounts
-        navigation.setOptions({
-          headerTitle: name
-        });
+      useEffect(() => {
+        const fetchPosts = async () => {
+          try {
+            const fetchedGame:GameProps = await gameService.getGame(7);
+            setGame(fetchedGame);
+            setLoading(false);
+          } catch (error) {
+            console.error('Error fetching posts:', error);
+            setLoading(false);
+          }
+        };
+    
+        fetchPosts();
       }, []);
 
 
-    //TODO hardcoded until API is live
-    useEffect(() => {
-        setGame({
-            id: id,
-            name: name,
-            owned: owned,
-            description: "",
-            price_tier:"tier1",
-            rules_file: "",
-            banner_image: "https://www.orderofgamers.com/wordpress/wp-content/uploads/2018/02/fallout.jpg",
-            description_image: "https://www.orderofgamers.com/wordpress/wp-content/uploads/2018/02/fallout_box.png",
-            designers: "Andrew Fischer, Nathan I Hajek",
-            artist: "?",
-            publisher: "Fantasy Flight Games",
-            year_published: "2017",
-            number_of_players: "1-4",
-            ages: "14+",
-            playing_time: "120-180 minutes",
-            website: "https://www.fantasyflightgames.com/en/news/2017/8/8/fallout/",
-            notes: "Includes the Atomic Bonds and New California expansions.",
-            created_at: new Date(),
-            updated_at: new Date()
-        });
-    }, []);
-
-
-    const restoreUpgrade = async () => { 
+    const restorePurchase = async () => { 
         // IAPs do not work in Expo Go :(
         if (Platform.OS !== "ios" && Platform.OS !== "android") return false;
     
@@ -98,7 +65,8 @@ const Game = ({ navigation }: NavProps) => {
           for (const result of results || []) {
             if (result.productId.indexOf(productId) > -1 && result.acknowledged) {
               
-                //TODO: update purcahse in DB
+    
+                await purchaseService.createPurchase({game_id:id});
 
               await InAppPurchases.disconnectAsync();
               return true;
@@ -110,60 +78,64 @@ const Game = ({ navigation }: NavProps) => {
           await InAppPurchases.disconnectAsync();
           throw e;
         }
-      }    
+    }    
 
-      const buy = async(
-        item: string,
-        onSuccess: () => Promise<void> | void
-      ) => {
-        // IAPs do not work in Expo Go :(
-        if (Platform.OS !== "ios" && Platform.OS !== "android") return false;
-    
-        const InAppPurchases = await import("expo-in-app-purchases"),
-          { IAPResponseCode } = await import("expo-in-app-purchases");
-    
-        try {
-          await InAppPurchases.connectAsync();
-    
-          await InAppPurchases.getProductsAsync([item]);
-    
-          InAppPurchases.purchaseItemAsync(item).then((_) => {});
-    
-          return await new Promise((resolve, reject) => {
-            InAppPurchases.setPurchaseListener(async (result) => {
-              switch (result.responseCode) {
-                case IAPResponseCode.OK:
-                case IAPResponseCode.DEFERRED:
-                  await onSuccess();
-                  await InAppPurchases.finishTransactionAsync(
-                    result.results![0],
-                    false
-                  );
+    const buy = async(
+    item: string,
+    onSuccess: () => Promise<void> | void
+    ) => {
+    // IAPs do not work in Expo Go :(
+    if (Platform.OS !== "ios" && Platform.OS !== "android") return false;
 
-                  //TODO: update purchase in DB
+    const InAppPurchases = await import("expo-in-app-purchases"),
+        { IAPResponseCode } = await import("expo-in-app-purchases");
+
+    try {
+        await InAppPurchases.connectAsync();
+
+        await InAppPurchases.getProductsAsync([item]);
+
+        InAppPurchases.purchaseItemAsync(item).then((_) => {});
+
+        return await new Promise((resolve, reject) => {
+        InAppPurchases.setPurchaseListener(async (result) => {
+            switch (result.responseCode) {
+            case IAPResponseCode.OK:
+            case IAPResponseCode.DEFERRED:
+                await onSuccess();
+                await InAppPurchases.finishTransactionAsync(
+                result.results![0],
+                false
+                );
+
+    
+                await purchaseService.createPurchase({game_id:id});
 
 
-                  await InAppPurchases.disconnectAsync();
-                  return resolve(true);
-                case IAPResponseCode.USER_CANCELED:
-                  await InAppPurchases.disconnectAsync();
-                  return resolve(false);
-                case IAPResponseCode.ERROR:
-                  await InAppPurchases.disconnectAsync();
-                  return reject(new Error("IAP Error: " + result.errorCode));
-              }
-            });
-          });
-        } catch (e) {
-          await InAppPurchases.disconnectAsync();
-          throw e;
-        }
-      }
+                await InAppPurchases.disconnectAsync();
+                return resolve(true);
+            case IAPResponseCode.USER_CANCELED:
+                await InAppPurchases.disconnectAsync();
+                return resolve(false);
+            case IAPResponseCode.ERROR:
+                await InAppPurchases.disconnectAsync();
+                return reject(new Error("IAP Error: " + result.errorCode));
+            }
+        });
+        });
+    } catch (e) {
+        await InAppPurchases.disconnectAsync();
+        throw e;
+    }
+    }
 
 
       
 
     return (
+        (loading ? 
+            <View style={{flex:1, alignItems:"center", justifyContent: "center"}}><ActivityIndicator size="large" color={theme.colors[colorScheme].black} /></View> : 
+            (
         <ScrollView style={styles.container} contentInsetAdjustmentBehavior="automatic">
             <View style={styles.gameBanner}>
                 <ImageBackground source={{ uri: game.banner_image}} resizeMode="cover" style={{...styles.gameBanner, flex:1 }}></ImageBackground>
@@ -247,11 +219,13 @@ const Game = ({ navigation }: NavProps) => {
 
 
         </ScrollView>
+            )
+        )
 
     )
 }
 
-export default Game
+export default GamePurchase
 
 const styles = StyleSheet.create({
     container: {

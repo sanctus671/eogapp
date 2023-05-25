@@ -1,5 +1,5 @@
 const environment = {
-    API_URL: "http://website.localhost/eogapp/api/public/api"
+    API_URL: "https://app.orderofgamers.com/api/public/api"
 }
 
 export default environment;

@@ -1,11 +1,13 @@
-import { Appearance, FlatList, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useState } from 'react'
+import { ActivityIndicator, Appearance, FlatList, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
 import theme from '../constants/theme';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import { useNavigation } from '@react-navigation/native';
 const colorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
 import { Ionicons } from '@expo/vector-icons';
+import FocusAwareStatusBar from '../components/FocusAwareStatusBar';
+import * as gameService from '../services/GameService';
 
 //TODO hard coded data for iOS testing as API isn't live yet
 const DATA = [ 
@@ -81,6 +83,33 @@ const Search = () => {
   const [search, setSearch] = React.useState('');
   const navigation = useNavigation();
 
+  const [games, setGames] = useState<Array<any>>([]);
+  const [filteredGames, setFilteredGames] = useState<Array<any>>([]);
+  const [loading, setLoading] = useState(true);
+
+  
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const fetchedGames:any = await gameService.getGames();
+
+        setGames(fetchedGames.data);
+
+        const filterGames = fetchedGames.data.filter((item:any) =>
+          item.name.toLowerCase().includes(search.toLowerCase())
+        );
+   
+        setFilteredGames(filterGames);
+
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
 
   const dataFiltered = DATA.filter(item =>
     item.name.toLowerCase().includes(search.toLowerCase()),
@@ -92,27 +121,29 @@ const Search = () => {
       headerSearchBarOptions: {
         onChangeText: (event:any) => setSearch(event.nativeEvent.text),
         barTintColor:theme.colors[colorScheme].searchBarBackground, tintColor:theme.colors.white, textColor: theme.colors[colorScheme].black, headerIconColor: theme.colors[colorScheme].lightgrey,
-        placeholder: "Search rules"
+        placeholder: "Find a game",
+        hideWhenScrolling:false
       },
     });
   }, [navigation]);
 
 
   return (
-
+    (loading ? 
+      <View style={{flex:1, alignItems:"center", justifyContent: "center", backgroundColor:theme.colors[colorScheme].white}}><ActivityIndicator size="large" color={theme.colors[colorScheme].black} /></View> :
     <View style={styles.container}>
-      <StatusBar style={colorScheme} />
+      <FocusAwareStatusBar style={colorScheme} />
       
 
       <FlatList
       contentInsetAdjustmentBehavior="automatic" 
-        data={dataFiltered}
+        data={filteredGames}
         renderItem={({item}) => {
           return (
             <TouchableOpacity style={{...styles.item, height: (segmentIndex === 0 ? 180 : "auto")}} activeOpacity={.8} 
-            onPress={() => navigation.navigate("Game" as never, {id:1, name: item.name, owned:item.owned} as never)}>
+            onPress={() => navigation.navigate("Game" as never, {id:item.id, name: item.name, owned:item.owned} as never)}>
               <View style={{...styles.itemImage, display:(segmentIndex === 0 ? "flex" : "none")}} >
-                <ImageBackground source={{ uri: item.bannerImage}} resizeMode="cover" style={{...styles.itemImage }}></ImageBackground>
+                <ImageBackground source={{ uri: item.banner_image}} resizeMode="cover" style={{...styles.itemImage }}></ImageBackground>
                 <View style={{...styles.itemListOwned, right:15, bottom:15, display: (item.owned ? "flex" : "none")}}>
                   <Ionicons name="checkmark" size={30} color={theme.colors.white} />
                 </View>                
@@ -153,6 +184,7 @@ const Search = () => {
         }
       />
     </View>
+  )
   )
 }
 

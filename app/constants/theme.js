@@ -43,7 +43,12 @@ const theme = {
             darkgrey: "#b0aeb3",
             tabBarIcon: "#8e8e93",
             tabBarBackground: "#d1d2d9",
-            searchBarBackground: "#e5e5ea"
+            searchBarBackground: "#e5e5ea",
+            gameHeaderBackground: "#ffffff",
+            accordianBackground: "#ffffff",
+            accordianHeaderBackground: "#f2f2f7",
+            accordianHeaderBackgroundExpanded: "#ffffff",
+            accordianSeperator: "#d1d2d9"  
         },
         dark: {
             white: "#000000",
@@ -53,7 +58,12 @@ const theme = {
             darkgrey:"#606063",
             tabBarIcon: "#8e8e93",
             tabBarBackground: "#1d1d1d",
-            searchBarBackground: "#1c1c1e"     
+            searchBarBackground: "#1c1c1e" ,
+            gameHeaderBackground: "#1d1d1d",
+            accordianBackground: "#2c2c2e",
+            accordianHeaderBackground: "#000000",
+            accordianHeaderBackgroundExpanded: "#3a3a3c",
+            accordianSeperator: "#48484a"       
         }
     }
 }

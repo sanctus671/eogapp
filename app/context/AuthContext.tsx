@@ -94,8 +94,9 @@ export const AuthProvider = ({children}:any) => {
 		try {
 			const result =  await axios.post(`${API_URL}/login`, {email, password});
 			
+			console.log(result);
 
-			storeToken(result.data.token);
+			storeToken(result.data.authorisation.token);
 			
 			return result;
 			
@@ -128,9 +129,9 @@ export const AuthProvider = ({children}:any) => {
 	const register = async (name:string, email:string, password: string) => {
 		
 		try {
-			const result = await axios.post(`${API_URL}/signup`, {email, password});
+			const result = await axios.post(`${API_URL}/register`, {email, password});
 
-			storeToken(result.data.token);
+			storeToken(result.data.authorisation.token);
 
 			return result;
 
@@ -146,9 +147,9 @@ export const AuthProvider = ({children}:any) => {
 	const registerAnonymous = async () => {
 		
 		try {
-			const result = await axios.post(`${API_URL}/signupanonymous`, {});
+			const result = await axios.post(`${API_URL}/registeranonymous`, {});
 
-			storeToken(result.data.token);
+			storeToken(result.data.authorisation.token);
 
 			return result;
 		
@@ -161,8 +162,7 @@ export const AuthProvider = ({children}:any) => {
 
 	
 	const logout = async () => {
-		await SecureStore.deleteItemAsync(TOKEN_KEY);
-		
+
 		axios.defaults.headers.common['Authorization'] = '';
 		
 		setAuthState({
@@ -171,6 +171,11 @@ export const AuthProvider = ({children}:any) => {
 			ready:true
 		
 		});
+
+
+		await SecureStore.deleteItemAsync(TOKEN_KEY);
+		
+
 		
 	}
 	

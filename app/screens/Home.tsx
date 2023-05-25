@@ -3,6 +3,7 @@ import React from 'react'
 import { StatusBar } from 'expo-status-bar';
 import theme from '../constants/theme';
 import { useNavigation } from '@react-navigation/native';
+import FocusAwareStatusBar from '../components/FocusAwareStatusBar';
 
 const colorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
 
@@ -13,7 +14,7 @@ const Home = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar style={colorScheme} />
+      <FocusAwareStatusBar style={colorScheme} />
       <Image style={{width:330,height:240}}  source={require("../../assets/logo.png")}     />
       <Text style={{color:theme.colors.white, fontFamily:theme.fonts.headings, fontSize:40, textAlign:"center", marginTop:15, marginBottom:10}}>Universal Rulebook</Text>
       <TouchableOpacity
@@ -48,7 +49,7 @@ const styles = StyleSheet.create({
     paddingLeft:15,
     paddingRight:15,
     paddingTop:15,
-    paddingBottom:60
+    paddingBottom:15
   },
     button: {
         backgroundColor:theme.colors.accent,

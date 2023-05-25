@@ -29,20 +29,20 @@ export const Navigation = () => {
         <Stack.Navigator screenOptions={{headerLargeTitleStyle:{fontFamily:theme.fonts.headings, color: theme.colors.white}, headerLargeTitle:true, headerLargeStyle: {backgroundColor:theme.colors.primary}, 
               headerStyle: {backgroundColor:theme.colors.primary}, headerTitleStyle:{color:theme.colors.white}, headerTransparent: true, headerTintColor: theme.colors.white}}>
   
-          { authState?.authenticated || true ? 
+          { authState?.authenticated ? 
             (<>
             <Stack.Screen name="Tabs" component={Tabs} options={{headerShown:false}}></Stack.Screen>
             </> )
             :
             (
               <>
-            <Stack.Screen name="Login" component={Login} options={{headerRight:() => (
+            <Stack.Screen name="Login" component={Login} options={{headerTransparent: false, headerRight:() => (
               <View style={{flexDirection:"row", alignItems:"center"}}>
                   <TouchableOpacity onPress={registerAnonymous}><Text style={{color:theme.colors.white, paddingRight:5, fontSize:16}}>Skip</Text></TouchableOpacity>
               </View>
               )}}></Stack.Screen>
-              <Stack.Screen name="Register" component={Register} ></Stack.Screen>
-              <Stack.Screen name="Forgot Password" component={ForgotPassword} ></Stack.Screen>
+              <Stack.Screen name="Register" component={Register} options={{headerTransparent: false}}></Stack.Screen>
+              <Stack.Screen name="Forgot Password" component={ForgotPassword} options={{headerTransparent: false}}></Stack.Screen>
               </>
               
           
