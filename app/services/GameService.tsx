@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, Image, View } from 'react-native';
 import axios from 'axios';
 import environment from "../constants/environment";
+import ImageViewer from '../components/ImageViewer';
 
 const API_URL = environment.API_URL;
 
@@ -33,6 +34,7 @@ export const getGame = async (gameId:number) => {
 
 export const formatGameRules = (gameRules:string) => {
   const gameRulesObj = JSON.parse(gameRules);
+  console.log(gameRulesObj);
 
   const formattedSections = [];
 
@@ -50,7 +52,7 @@ export const formatGameRules = (gameRules:string) => {
       let currentSubSection:any = {};
       for (let ruleItemSection of ruleItemSections){
    
-        if (ruleItemSection.class === "h1" ){
+        if (ruleItemSection.class.includes("h1") /*ruleItemSection.class === "h1" */){
 
           if (currentSubSection.title){
             currentSection.contentSubItems.push(currentSubSection);
@@ -91,7 +93,7 @@ export const formatGameRules = (gameRules:string) => {
               currentSection.contentSubItems.push(currentSubSection);
             }
 
-            console.log(ruleItemSection.html);
+         
             let subTitle = ruleItemSection.html.replace("{img}", "").replace("{span}", "").trim();
 
             if (subTitle.length < 1 && ruleItemSection.children){
@@ -129,11 +131,18 @@ export const formatGameRules = (gameRules:string) => {
                     if (ruleItemSectionChildChild.tag === "img"){
                       let preContent = innerContent.split("{img}", 1);
 
+                      let width = 20;
+                      let height = 20;
+                      if (ruleItemSectionChildChild.styles && ruleItemSectionChildChild.styles.height && ruleItemSectionChildChild.styles.width){
+                        width = parseFloat(ruleItemSectionChildChild.styles.width.replace("px", "")) * 2;
+                        height = parseFloat(ruleItemSectionChildChild.styles.height.replace("px", "")) * 2;
+                      }
+
                       currentSection.contentItems.push(<Text style={{fontWeight:'bold', color:'#C0AB99'}}>{preContent[0]}</Text>);
-                      currentSection.contentItems.push(<Image  style={{width:20, height:20}} resizeMode="contain" source={{uri:ruleItemSectionChildChild.src}} />);
+                      currentSection.contentItems.push(<ImageViewer imageUrl={ruleItemSectionChildChild.src} width={width} height={height} />);
 
                       if (currentSection.fullPage){currentSubSection.contentItems.push(<Text style={{fontWeight:'bold', color:'#C0AB99'}}>{preContent[0]}</Text>);}
-                      if (currentSection.fullPage){currentSubSection.contentItems.push(<Image  style={{width:20, height:20}} resizeMode="contain" source={{uri:ruleItemSectionChildChild.src}} />);}
+                      if (currentSection.fullPage){currentSubSection.contentItems.push(<ImageViewer imageUrl={ruleItemSectionChildChild.src}  width={width} height={height} />);}
 
                       innerContent = innerContent.replace(preContent[0], "").replace("{img}", "");
                     }
@@ -157,13 +166,20 @@ export const formatGameRules = (gameRules:string) => {
               else if (ruleItemSectionChild.tag === "img"){
                 //image
                 //content = content.replace("{img}", "<Image source={{uri: " + ruleItemSectionChild.src + "}} />");
+                      
+                let width = 20;
+                let height = 20;
+                if (ruleItemSectionChild.styles && ruleItemSectionChild.styles.height && ruleItemSectionChild.styles.width){
+                  width = parseFloat(ruleItemSectionChild.styles.width.replace("px", "")) * 2;
+                  height = parseFloat(ruleItemSectionChild.styles.height.replace("px", "")) * 2;
+                }
 
                 let preContent = content.split("{img}", 1);
                 currentSection.contentItems.push(<Text>{preContent[0]}</Text>);
-                currentSection.contentItems.push(<Image  style={{width:20, height:20}} resizeMode="contain" source={{uri:ruleItemSectionChild.src}} />);
+                currentSection.contentItems.push(<ImageViewer imageUrl={ruleItemSectionChild.src} width={width} height={height} />);
 
                 if (currentSection.fullPage){currentSubSection.contentItems.push(<Text>{preContent[0]}</Text>);}
-                if (currentSection.fullPage){currentSubSection.contentItems.push(<Image  style={{width:20, height:20}} resizeMode="contain" source={{uri:ruleItemSectionChild.src}} />);}
+                if (currentSection.fullPage){currentSubSection.contentItems.push(<ImageViewer imageUrl={ruleItemSectionChild.src}  width={width} height={height}  />);}
 
                 content = content.replace(preContent[0], "").replace("{img}", "");
 

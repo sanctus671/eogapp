@@ -49,7 +49,7 @@ const Account = () => {
 
 
     const logout = async () => {
-        const result = await logout!();
+        const result = await onLogout!();
     }
 
     const showToast = () => {
@@ -174,7 +174,7 @@ const Account = () => {
           { title: 'Change Name', icon: 'ios-person', onPress: () => {setChangeNameVisible(true)} }, 
           { title: 'Change Email', icon: 'ios-mail', onPress: () => {setChangeEmailVisible(true)} }, 
           { title: 'Change Password', icon: 'ios-key', onPress: () => {setChangePasswordVisible(true)} },
-          { title: 'Logout', icon: 'ios-lock-closed', onPress: () => logout() },
+          { title: 'Logout', icon: 'ios-lock-closed', onPress: () => {logout()} },
         ],
       }
   
@@ -221,7 +221,7 @@ const Account = () => {
                   value={password}
                   placeholder="Password"
                   placeholderTextColor={theme.colors[colorScheme].grey}
-                  style={{...theme.layout.input, ...styles.textInput}}
+                  style={{ ...styles.textInput}}
                   />    
                   <Dialog.Input
                   secureTextEntry
@@ -229,7 +229,7 @@ const Account = () => {
                   value={repeatPassword}
                   placeholder="Repeat Password"
                   placeholderTextColor={theme.colors[colorScheme].grey}
-                  style={{...theme.layout.input, ...styles.textInput}}
+                  style={{ ...styles.textInput}}
                   />    
                   <Dialog.Button color={theme.colors.accent} label="Cancel" onPress={() => {setChangePasswordVisible(false)}} />
                   <Dialog.Button color={theme.colors.accent} label="Change" bold={true} onPress={() => {changePassword()}} />
@@ -246,7 +246,7 @@ const Account = () => {
                 value={email}
                 placeholder="Email" autoCapitalize="none" clearButtonMode="while-editing" textContentType="emailAddress"   keyboardType="email-address"
                 placeholderTextColor={theme.colors[colorScheme].grey}
-                style={{...theme.layout.input, ...styles.textInput}}
+                style={{...styles.textInput}}
                 />    
                 <Dialog.Button color={theme.colors.accent} label="Cancel" onPress={() => {setChangeEmailVisible(false)}} />
                 <Dialog.Button color={theme.colors.accent} label="Change" bold={true} onPress={() => {changeEmail()}} />
@@ -264,7 +264,7 @@ const Account = () => {
                 value={name}
                 placeholder="Name"  clearButtonMode="while-editing" 
                 placeholderTextColor={theme.colors[colorScheme].grey}
-                style={{...theme.layout.input, ...styles.textInput}}
+                style={{...styles.textInput}}
                 />    
                 <Dialog.Button color={theme.colors.accent} label="Cancel" onPress={() => {setChangeNameVisible(false)}} />
                 <Dialog.Button color={theme.colors.accent} label="Change" bold={true} onPress={() => {changeName()}} />

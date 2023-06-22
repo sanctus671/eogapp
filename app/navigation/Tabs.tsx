@@ -13,20 +13,20 @@ import { Ionicons } from '@expo/vector-icons';
 import GameRulesInner from '../screens/Game/GameRulesInner';
 import Purchases from '../screens/Purchases';
 import { useNavigation } from '@react-navigation/native';
-
 const Tab = createBottomTabNavigator();
 
 const screenOptions = {headerLargeTitleStyle:{fontFamily:theme.fonts.headings, color: theme.colors.white}, headerLargeTitle:true, headerLargeStyle: {backgroundColor:theme.colors.primary}, 
-headerStyle: {backgroundColor:theme.colors.primary}, headerTitleStyle:{color:theme.colors.white}, headerTransparent: false, headerTintColor: theme.colors.white};
+headerStyle: {backgroundColor:theme.colors.primary}, headerTitleStyle:{color:theme.colors.white}, headerTransparent: false, headerTintColor: theme.colors.white, 
+};
 
 
 const colorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
 
 const SearchWrapper = () => {
-    
+  
     const SearchStack = createNativeStackNavigator();
     return (
-        <SearchStack.Navigator screenOptions={screenOptions}>
+        <SearchStack.Navigator screenOptions={{...screenOptions, animation: (Platform.OS === "android" ? "fade_from_bottom" : "default")}}>
             <SearchStack.Screen options={{title: "Search Games", headerLargeTitle: true,headerTransparent: Platform.OS === "ios"}}
                 name="Search"
                 component={Search}
@@ -46,7 +46,7 @@ const SearchWrapper = () => {
 const GamesWrapper = () => {
     const GameStack = createNativeStackNavigator();
     return (
-        <GameStack.Navigator screenOptions={screenOptions}>
+        <GameStack.Navigator screenOptions={{...screenOptions, animation: (Platform.OS === "android" ? "fade_from_bottom" : "default")}}>
             <GameStack.Screen options={{title: "My Games", headerLargeTitle: true,headerTransparent: Platform.OS === "ios", 
             headerLargeStyle: {backgroundColor:theme.colors.secondary}, headerStyle: {backgroundColor:theme.colors.secondary}} }
                 name="Games"
@@ -56,7 +56,7 @@ const GamesWrapper = () => {
             name="Game"
             component={Game}
             />          
-            <GameStack.Screen options={{title: "Game Rules", headerLargeTitle: true,headerTransparent: Platform.OS === "ios"}}
+            <GameStack.Screen options={{title: "Game Rules", headerLargeTitle: true,headerTransparent: Platform.OS === "ios"} }
             name="GameRulesInner"
             component={GameRulesInner}
             />
@@ -69,7 +69,7 @@ const AccountWrapper = () => {
     const navigation = useNavigation();
     const AccountStack = createNativeStackNavigator();
     return (
-        <AccountStack.Navigator screenOptions={screenOptions}>
+        <AccountStack.Navigator screenOptions={{...screenOptions, animation: (Platform.OS === "android" ? "fade_from_bottom" : "default")}}>
             <AccountStack.Screen options={{title: "My Account", headerLargeTitle: true,headerTransparent: Platform.OS === "ios", 
             headerLargeStyle: {backgroundColor:theme.colors.darkgrey}, headerStyle: {backgroundColor:theme.colors.darkgrey}} }
                 name="Account"

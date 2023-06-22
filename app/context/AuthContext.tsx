@@ -57,7 +57,7 @@ export const AuthProvider = ({children}:any) => {
 				}
 
 			}
-			finally{
+			catch{
 				console.log("here");
 				setAuthState(
 					{
@@ -163,17 +163,18 @@ export const AuthProvider = ({children}:any) => {
 	
 	const logout = async () => {
 
-		axios.defaults.headers.common['Authorization'] = '';
+		try {
+			axios.defaults.headers.common['Authorization'] = '';
+			setAuthState({
+			  token: null,
+			  authenticated: false,
+			  ready: true
+			});
 		
-		setAuthState({
-			token:null,
-			authenticated:false,
-			ready:true
-		
-		});
-
-
-		await SecureStore.deleteItemAsync(TOKEN_KEY);
+			await SecureStore.deleteItemAsync(TOKEN_KEY);
+		  } catch (error) {
+			console.error('Error during logout:', error);
+		  }
 		
 
 		

@@ -5,6 +5,7 @@ import * as gameService from '../../services/GameService';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Accordion from '../../components/Accordian';
+import ImageViewer from '../../components/ImageViewer';
 const globalColorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
 type ThemeOptions = 'dark' | 'light';
 
@@ -29,7 +30,7 @@ const GameRules = ({ id }: {id: number}) => {
         navigation.setOptions({
           headerSearchBarOptions: {
             onChangeText: (event:any) => {doSearch(event.nativeEvent.text)},
-            barTintColor:theme.colors[globalColorScheme].searchBarBackground, tintColor:theme.colors.white, textColor: theme.colors[globalColorScheme].black, headerIconColor: theme.colors[globalColorScheme].lightgrey,
+            barTintColor:theme.colors[globalColorScheme].searchBarBackground, tintColor:theme.colors[colorScheme].black, textColor: theme.colors[globalColorScheme].black, headerIconColor: theme.colors[globalColorScheme].lightgrey,
             placeholder: "Search rules",
             hideWhenScrolling:false
           },
@@ -133,12 +134,6 @@ const GameRules = ({ id }: {id: number}) => {
 
 
 
-
-    useEffect(() => {
-      console.log("Current color scheme:", colorScheme);
-    }, [colorScheme]);
-
-
     const toggleColorScheme = () => {
       setColorScheme((prevColorScheme) =>
         prevColorScheme === "dark" ? "light" : "dark"
@@ -151,11 +146,11 @@ const GameRules = ({ id }: {id: number}) => {
         try {
           const fetchedGame:GameProps = await gameService.getGame(id);
           setGame(fetchedGame);
-          console.log(fetchedGame);
+       
           let game = fetchedGame;
           let rules = game.game_rules.rules;
           let formattedRules = gameService.formatGameRules(rules);
-          console.log(formattedRules);
+       
           setGameRules(formattedRules);
           setLoading(false);
         } catch (error) {

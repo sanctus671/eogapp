@@ -9,7 +9,7 @@ import * as purchaseService from '../../services/PurchaseService';
   type GameProps = {
     id?:number; 'name'?:string; 'owned'?:boolean; 'description'?:string; 'price_tier'?: string; 'rules_file'?: string; 'banner_image'?: string; 'description_image'?: string; 
     'designers'?:string; 'artist'?:string; 'publisher'?: string; 'year_published'?:string; 'number_of_players'?:string; 'ages'?:string; 'playing_time'?:string; 
-    'website'?: string; 'notes'?:string; 'created_at'?: Date; 'updated_at'?: Date; 'game_rules'?: any;
+    'website'?: string; 'notes'?:string; 'created_at'?: Date; 'updated_at'?: Date; 'game_rules'?: any; 'version'?:number
   }
 
 
@@ -38,7 +38,7 @@ const GamePurchase = ({ id }: {id: number}) => {
       useEffect(() => {
         const fetchPosts = async () => {
           try {
-            const fetchedGame:GameProps = await gameService.getGame(7);
+            const fetchedGame:GameProps = await gameService.getGame(id);
             setGame(fetchedGame);
             setLoading(false);
           } catch (error) {
@@ -193,7 +193,13 @@ const GamePurchase = ({ id }: {id: number}) => {
                     <Text style={{...styles.gameDescriptionInfoItem}}>
                         <Text style={styles.gameDescriptionInfoItemLabel}>Website:</Text>
                         <Text style={{color:theme.colors.accent}} onPress={() => openWebsite(game.website)}>{(game.publisher ? game.publisher : "View website")}</Text>
-                    </Text> : <></>)}                
+                    </Text> : <></>)}     
+
+                    {(game.version ?
+                    <Text style={{...styles.gameDescriptionInfoItem}}>
+                        <Text style={styles.gameDescriptionInfoItemLabel}>Rules Version:</Text>
+                        {game.version}
+                    </Text> : <></>)}            
                 </View>
 
             </View>

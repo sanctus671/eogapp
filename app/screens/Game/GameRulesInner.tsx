@@ -1,5 +1,5 @@
 import { Appearance, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { ReactElement, ReactNode, useEffect, useState } from 'react'
 import { useNavigation, useRoute } from '@react-navigation/native';
 import theme from '../../constants/theme';
 const globalColorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
@@ -18,7 +18,7 @@ type RouteParams = {
 type NavProps = {
   navigation: NativeStackNavigationProp<{}>;
 };
-
+type RenderFunction = (child: ReactNode) => ReactNode;
 const GameRulesInner = ({ navigation }: NavProps) => {
 
   const route = useRoute();
@@ -31,12 +31,12 @@ const GameRulesInner = ({ navigation }: NavProps) => {
 
 
   let subItemCount = 0;
-console.log(innerItem);
+
   for (let contentSubItem of innerItem.contentSubItems){
     subItemCount += contentSubItem.contentItems.length;
   }
 
-  console.log(subItemCount)
+
 
   preContentItems.splice(-(subItemCount + innerItem.contentSubItems.length));
 
@@ -109,7 +109,7 @@ console.log(innerItem);
         headerTintColor: theme.colors[globalColorScheme].black ,       
         headerSearchBarOptions: {
           onChangeText: (event:any) => setSearch(event.nativeEvent.text),
-          barTintColor:theme.colors[globalColorScheme].searchBarBackground, tintColor:theme.colors.white, textColor: theme.colors[globalColorScheme].black, headerIconColor: theme.colors[globalColorScheme].lightgrey,
+          barTintColor:theme.colors[globalColorScheme].searchBarBackground, tintColor:theme.colors[colorScheme].black, textColor: theme.colors[globalColorScheme].black, headerIconColor: theme.colors[globalColorScheme].lightgrey,
           placeholder: "Search rules",
           hideWhenScrolling:false
         },
@@ -158,61 +158,55 @@ console.log(innerItem);
       if (node.type === 'img' || node.type === 'Image') {
         return node; // Return the Image node as is
       }
+
+
+      return updateElementWithChildren(node, renderHighlightedText);
+
   
-      return React.cloneElement(
-        node,
-        {
-          children: React.Children.map(node.props.children, renderHighlightedText),
-        }
-      );
     }
   
     return node;
     };
 
+    const updateElementWithChildren = (element: ReactElement,
+      renderFunction: RenderFunction): ReactElement => {
+      const { children, ...otherProps } = element.props;
 
-  return (
-    <KeyboardAvoidingView
-    behavior={'height'} style={styles.container}>    
-    <ScrollView style={{...styles.container, backgroundColor: theme.colors[colorScheme].white}} contentInsetAdjustmentBehavior="automatic">
-        { (
-          preContentItems.length > 0 ?
-        <View style={{...styles.contentContainer, backgroundColor: theme.colors[colorScheme].accordianBackground }} >
-            <Text style={{...styles.contentText, color:theme.colors[colorScheme].black}}>
-              {preContentItems.map((preContentItem:any, preContentIndex:number) => (
-                  <Text key={preContentIndex}>{(search ? renderHighlightedText(preContentItem) : preContentItem)}</Text>
-              ))}
-            </Text>
-        </View>
-        : <></>
-        )
-              }
-      
+      const updatedChildren = React.Children.map(children, renderFunction);
+
+      return React.createElement(element.type, otherProps, updatedChildren);
+    }    
 
 
-    {filteredGameRules.map((item:any, index:number) => (
-      
-        
-        (item.specialHeading ? 
-          <View key={index} style={{...styles.specialHeading, borderColor: theme.colors[colorScheme].accordianSeperator}}>
-            <Text style={styles.specialHeadingText}>{(search ? renderHighlightedText(item.title) : item.title)}</Text>
-          </View> 
-
-        :
-
-        <Accordion headerText={item.title} outsideColorScheme={colorScheme} key={index} search={search}>
-          {item.contentItems.map((contentItem:any, contentIndex:number) => (
-            (contentIndex > 1 ? <Text key={contentIndex}>{contentItem}</Text> : <></>)
-        ))}               
-        </Accordion>
-        )
-          
-      
-    ))}
-
-  </ScrollView>
-  </KeyboardAvoidingView>
-  )
+    return (
+      <KeyboardAvoidingView behavior={'height'} style={styles.container}>
+        <ScrollView style={{ ...styles.container, backgroundColor: theme.colors[colorScheme].white }} contentInsetAdjustmentBehavior="automatic">
+          {preContentItems.length > 0 && (
+            <View style={{ ...styles.contentContainer, backgroundColor: theme.colors[colorScheme].accordianBackground }} key="preContent">
+              <Text style={{ ...styles.contentText, color: theme.colors[colorScheme].black }}>
+                {preContentItems.map((preContentItem: any, preContentIndex: number) => (
+                  <Text key={preContentIndex}>{search ? renderHighlightedText(preContentItem) : preContentItem}</Text>
+                ))}
+              </Text>
+            </View>
+          )}
+    
+          {filteredGameRules.map((item: any, index: number) => (
+            item.specialHeading ? (
+              <View key={index} style={{ ...styles.specialHeading, borderColor: theme.colors[colorScheme].accordianSeperator }}>
+                <Text style={styles.specialHeadingText}>{search ? renderHighlightedText(item.title) : item.title}</Text>
+              </View>
+            ) : (
+              <Accordion headerText={item.title} outsideColorScheme={colorScheme} key={index} search={search}>
+                {item.contentItems.map((contentItem: any, contentIndex: number) => (
+                  contentIndex > 1 ? <Text key={contentIndex}>{contentItem}</Text> : null
+                ))}
+              </Accordion>
+            )
+          ))}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
 }
 
 export default GameRulesInner

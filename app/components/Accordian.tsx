@@ -1,4 +1,4 @@
-import React, { useState, useRef, PropsWithChildren, useMemo } from 'react';
+import React, { useState, useRef, PropsWithChildren, useMemo, ReactElement, ReactNode } from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -20,7 +20,7 @@ type AccordionProps = PropsWithChildren<{
     outsideColorScheme: string;
     search:string;
   }>;
-
+  type RenderFunction = (child: ReactNode) => ReactNode;
 const Accordion: React.FC<AccordionProps> = ({ children, headerText, outsideColorScheme, search }) => {
   const [expanded, setExpanded] = useState(false);
   const arrowRotation = useState(new Animated.Value(expanded ? 1 : 0))[0];
@@ -75,16 +75,21 @@ const Accordion: React.FC<AccordionProps> = ({ children, headerText, outsideColo
         return node; // Return the Image node as is
       }
   
-      return React.cloneElement(
-        node,
-        {
-          children: React.Children.map(node.props.children, renderHighlightedText),
-        }
-      );
+      return updateElementWithChildren(node, renderHighlightedText);
+
     }
   
     return node;
   };
+
+  const updateElementWithChildren = (element: ReactElement,
+    renderFunction: RenderFunction): ReactElement => {
+    const { children, ...otherProps } = element.props;
+
+    const updatedChildren = React.Children.map(children, renderFunction);
+
+    return React.createElement(element.type, otherProps, updatedChildren);
+  }  
   
   
   

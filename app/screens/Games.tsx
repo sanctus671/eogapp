@@ -9,72 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import FocusAwareStatusBar from '../components/FocusAwareStatusBar';
 import * as gameService from '../services/GameService';
 
-//TODO hard coded data for iOS testing as API isn't live yet
-const DATA = [ 
-  {
-    id: '1',
-    name: 'Fallout v3',
-    publisher: 'Fantasy Flight Games',
-    bannerImage: 'https://www.orderofgamers.com/wordpress/wp-content/uploads/2018/02/fallout.jpg',
-    owned:true
-  },
-  {
-    id: '2',
-    name: 'Fate of the Elder Gods v1',
-    publisher: 'Fabled Nexus',
-    bannerImage: 'https://www.orderofgamers.com/wordpress/wp-content/uploads/2019/04/fateoftheeldergods.jpg',
-    owned:true
-  },
-  {
-    id: '3',
-    name: 'Fire & Axe: A Viking Saga v1.2',
-    publisher: 'Asmodee',
-    bannerImage: 'https://www.orderofgamers.com/wordpress/wp-content/uploads/2013/04/fireandaxe.jpg',
-    owned:true
-  },
-  {
-    id: '4',
-    name: 'Firefight v1.1',
-    publisher: 'Mantic Games',
-    bannerImage: 'https://www.orderofgamers.com/wordpress/wp-content/uploads/2022/05/firefight.jpg',
-    owned:true
-  },
-  {
-    id: '5',
-    name: 'Firefly: The Game v5',
-    publisher: 'Gale Force Nine',
-    bannerImage: 'https://www.orderofgamers.com/wordpress/wp-content/uploads/2014/01/firefly.jpg',
-    owned:true
-  },
-  {
-    id: '6',
-    name: 'Firefly: Misbehavin v1',
-    publisher: 'Gale Force Nine',
-    bannerImage: 'https://www.orderofgamers.com/wordpress/wp-content/uploads/2022/10/fireflymisbehavin.jpg',
-    owned:true
-  },
-  {
-    id: '7',
-    name: 'Firestorm: Planetfall v1.1',
-    publisher: 'Spartan Games',
-    bannerImage: 'https://www.orderofgamers.com/wordpress/wp-content/uploads/2016/03/firestormplanetfall.jpg',
-    owned:true
-  },
-  {
-    id: '8',
-    name: 'Fireteam Zero v2',
-    publisher: 'Emergent Games',
-    bannerImage: 'https://www.orderofgamers.com/wordpress/wp-content/uploads/2016/03/fireteamzero.jpg',
-    owned:true
-  },
-  {
-    id: '9',
-    name: 'Flip Ships v1',
-    publisher: 'Renegade Game Studios',
-    bannerImage: 'https://www.orderofgamers.com/wordpress/wp-content/uploads/2018/05/flipships.jpg',
-    owned:true
-  },
-];
+
 
 const Games = () => {
   const [segmentIndex, setSegmentIndex] = useState(0);
@@ -89,32 +24,28 @@ const Games = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const fetchedGames:any = await gameService.getGames();
-        console.log(fetchedGames.data)
+        const fetchedGames = await gameService.getGames();
         setGames(fetchedGames.data);
-console.log(games);
-        const filterGames = fetchedGames.data.filter((item:any) =>
-          item.name.toLowerCase().includes(search.toLowerCase()) && item.owned
-        );
-        console.log(filterGames);
-        setFilteredGames(filterGames);
-
         setLoading(false);
       } catch (error) {
         console.error('Error fetching posts:', error);
         setLoading(false);
       }
     };
-
+  
     fetchPosts();
   }, []);
+  
+  useEffect(() => {
+    const filterGames = games.filter((item) =>
+      item.name.toLowerCase().includes(search.toLowerCase()) && item.owned
+    );
+  
+    setFilteredGames(filterGames);
+  }, [search, games]);
 
 
 
-
-  const dataFiltered = DATA.filter(item =>
-    item.name.toLowerCase().includes(search.toLowerCase()),
-  );
 
 
   React.useLayoutEffect(() => {
