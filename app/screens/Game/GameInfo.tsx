@@ -4,6 +4,8 @@ import theme from '../../constants/theme';
 import * as gameService from '../../services/GameService';
 const colorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
 import * as purchaseService from '../../services/PurchaseService';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import ImageViewer from '../../components/ImageViewer';
 
 
@@ -13,17 +15,39 @@ import ImageViewer from '../../components/ImageViewer';
     'website'?: string; 'notes'?:string; 'created_at'?: Date; 'updated_at'?: Date; 'game_rules'?: any; 'version'?:number
   }
 
+  type RouteParams = {
+    id:number
+  };
+  type NavProps = {
+    navigation: NativeStackNavigationProp<{}>;
+  };
 
 
-const GamePurchase = ({ id }: {id: number}) => {
+const GameInfo = ({ navigation }: NavProps) => {
+
+    const route = useRoute();
+    const { id } = route.params as RouteParams;
+
+    useEffect(() => {
+        // Update the stack header options when the component mounts
+        navigation.setOptions({
+            headerRight: () => (
+                (Platform.OS === "ios" ? 
+                <TouchableOpacity
+                onPress={() => {
+                    navigation.navigate("Game" as never, {id: id, owned:true, name: ""} as never)
+                }}
+                style={{ paddingTop:10,paddingBottom:10, paddingLeft:10, paddingRight:0 }}
+                >
+                <Text style={{color:theme.colors.accent, fontSize:16}}>Close</Text>
+                </TouchableOpacity> :
+                <></>)
+            )});
+      }, []);
 
 
-    const productId = "com.eogapp.app.game"; //TODO update with product data once inapp products are created
-    const priceTiers:any = {
-        "tier1" : "$1.99",
-        "tier2" : "$2.99",
-        "tier3" : "$3.99"
-    }
+
+
     const [loading, setLoading] = useState(true);
 
     const [game, setGame] = useState<GameProps>({
@@ -52,83 +76,7 @@ const GamePurchase = ({ id }: {id: number}) => {
       }, []);
 
 
-    const restorePurchase = async () => { 
-        // IAPs do not work in Expo Go :(
-        if (Platform.OS !== "ios" && Platform.OS !== "android") return false;
-    
-        const InAppPurchases = await import("expo-in-app-purchases");
-    
-        try {
-          await InAppPurchases.connectAsync();
-    
-          const { results } = await InAppPurchases.getPurchaseHistoryAsync();
-    
-          for (const result of results || []) {
-            if (result.productId.indexOf(productId) > -1 && result.acknowledged) {
-              
-    
-                await purchaseService.createPurchase({game_id:id});
 
-              await InAppPurchases.disconnectAsync();
-              return true;
-            }
-          }
-          await InAppPurchases.disconnectAsync();
-          return false;
-        } catch (e) {
-          await InAppPurchases.disconnectAsync();
-          throw e;
-        }
-    }    
-
-    const buy = async(
-    item: string,
-    onSuccess: () => Promise<void> | void
-    ) => {
-    // IAPs do not work in Expo Go :(
-    if (Platform.OS !== "ios" && Platform.OS !== "android") return false;
-
-    const InAppPurchases = await import("expo-in-app-purchases"),
-        { IAPResponseCode } = await import("expo-in-app-purchases");
-
-    try {
-        await InAppPurchases.connectAsync();
-
-        await InAppPurchases.getProductsAsync([item]);
-
-        InAppPurchases.purchaseItemAsync(item).then((_) => {});
-
-        return await new Promise((resolve, reject) => {
-        InAppPurchases.setPurchaseListener(async (result) => {
-            switch (result.responseCode) {
-            case IAPResponseCode.OK:
-            case IAPResponseCode.DEFERRED:
-                await onSuccess();
-                await InAppPurchases.finishTransactionAsync(
-                result.results![0],
-                false
-                );
-
-    
-                await purchaseService.createPurchase({game_id:id});
-
-
-                await InAppPurchases.disconnectAsync();
-                return resolve(true);
-            case IAPResponseCode.USER_CANCELED:
-                await InAppPurchases.disconnectAsync();
-                return resolve(false);
-            case IAPResponseCode.ERROR:
-                await InAppPurchases.disconnectAsync();
-                return reject(new Error("IAP Error: " + result.errorCode));
-            }
-        });
-        });
-    } catch (e) {
-        await InAppPurchases.disconnectAsync();
-        throw e;
-    }
-    }
 
     const getItemHeight = () => {
       const windowWidth = Dimensions.get('window').width;
@@ -149,14 +97,14 @@ const GamePurchase = ({ id }: {id: number}) => {
 
     return (
         (loading ? 
-            <View style={{flex:1, alignItems:"center", justifyContent: "center"}}><ActivityIndicator size="large" color={theme.colors[colorScheme].black} /></View> : 
+            <View style={{flex:1, alignItems:"center", justifyContent: "center", backgroundColor: theme.colors[colorScheme].white}}><ActivityIndicator size="large" color={theme.colors[colorScheme].black} /></View> : 
             (
         <ScrollView style={styles.container} contentInsetAdjustmentBehavior="automatic">
             <View style={{...styles.gameBanner, height: getItemHeight()}}>
                 <ImageBackground source={{ uri: game.banner_image}} resizeMode="cover" style={{...styles.gameBanner, flex:1 }}></ImageBackground>
             </View>
 
-            <View style={styles.gameDescription}>
+            <View style={{...styles.gameDescription, borderBottomWidth: (game.description ? 0 : 1), paddingBottom: (game.description ? 5 : 20)}}>
                 <View style={styles.gameDescriptionImage}>
                 <ImageViewer imageUrl={game.description_image ? game.description_image : ""} width={"100%"} height={"auto"}  style={styles.gameDescriptionImageFile} styleInner={{flex:1, flexDirection:"row"}}   />
                 </View>
@@ -209,27 +157,29 @@ const GamePurchase = ({ id }: {id: number}) => {
                         <Text style={styles.gameDescriptionInfoItemLabel}>Website: </Text>
                         <Text style={{color:theme.colors.accent}} onPress={() => openWebsite(game.website)}>{(game.publisher ? game.publisher : "View website")}</Text>
                     </Text> : <></>)}     
-
+{/* 
                     {(game.version ?
                     <Text style={{...styles.gameDescriptionInfoItem}}>
-                        <Text style={styles.gameDescriptionInfoItemLabel}>Rules Version: </Text>
+                        <Text style={styles.gameDescriptionInfoItemLabel}>Rules Version:</Text>
                         {game.version}
-                    </Text> : <></>)}            
+                    </Text> : <></>)}  */}           
                 </View>
 
             </View>
 
 
-            <View style={styles.gamePurchase}>
-                <Text style={styles.gamePurchaseTitle}>Buy the rules & reference</Text>
-                <TouchableOpacity style={styles.gamePurchaseButton} activeOpacity={.8} onPress={() => buy} >
-                        <Text style={styles.gamePurchaseName}>{game.name}</Text>
-                        {(game.price_tier ? 
-                        <Text style={styles.gamePurchasePrice}>{priceTiers[game.price_tier]}</Text>
-                        : <></>)}
-                        
-                </TouchableOpacity>        
+
+{(game.description ?            
+<View style={{...styles.gameNotes,  borderBottomWidth: 1}}>
+    <Text style={styles.gameNotesNote}>{game.description}</Text>
+</View>
+ : <></>)}
+
+{(game.version ?            
+            <View style={{...styles.gameNotes, marginTop: 15, marginBottom: (game.notes ? 15 : 0),  borderBottomWidth: game.notes ? 1 : 0}}>
+                <Text style={{...styles.gameNotesNote, fontWeight:"bold"}}>Version {game.version}</Text>
             </View>
+             : <></>)}
 
             {(game.notes ?            
             <View style={styles.gameNotes}>
@@ -246,7 +196,7 @@ const GamePurchase = ({ id }: {id: number}) => {
     )
 }
 
-export default GamePurchase
+export default GameInfo
 
 const styles = StyleSheet.create({
     container: {
@@ -263,9 +213,7 @@ const styles = StyleSheet.create({
         marginRight:15,
         paddingRight:10,
         paddingTop:20,
-        paddingBottom:20,
         marginBottom:10,
-        borderBottomWidth: 1,
         borderBottomColor: theme.colors[colorScheme].darkgrey
     },
     gameDescriptionImage: {
@@ -336,7 +284,8 @@ const styles = StyleSheet.create({
     gameNotes: {
         marginLeft:15,
         marginRight:15,   
-        paddingBottom:15
+        paddingBottom:15,
+        borderBottomColor: theme.colors[colorScheme].darkgrey
     },
     gameNotesTitle: {
         color: theme.colors[colorScheme].darkgrey,

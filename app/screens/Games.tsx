@@ -1,4 +1,4 @@
-import { ActivityIndicator, Appearance, FlatList, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, Appearance, Dimensions, FlatList, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
 import theme from '../constants/theme';
@@ -38,7 +38,7 @@ const Games = () => {
   
   useEffect(() => {
     const filterGames = games.filter((item) =>
-      item.name.toLowerCase().includes(search.toLowerCase()) && item.owned
+      (item.name.toLowerCase().includes(search.toLowerCase()) || item.name.replace(/[^\w\s]/g, '').toLowerCase().includes(search.toLowerCase())) && item.owned
     );
   
     setFilteredGames(filterGames);
@@ -60,10 +60,24 @@ const Games = () => {
     });
   }, [navigation]);
 
+  const getItemHeight = () => {
+    const windowWidth = Dimensions.get('window').width;
+    if (windowWidth > 1200){
+      return 500;
+    }
+    if (windowWidth > 1000){
+      return 400;
+    }
+    else if (windowWidth > 700){
+      return 300;
+    }
+    return 180;
+  }
+
 
   return (
     (loading ? 
-      <View style={{flex:1, alignItems:"center", justifyContent: "center", backgroundColor:theme.colors[colorScheme].white}}><ActivityIndicator size="large" color={theme.colors[colorScheme].black} /></View> :
+      <View style={{flex:1, alignItems:"center", justifyContent: "center", backgroundColor:theme.colors[colorScheme].white}}><FocusAwareStatusBar style={colorScheme} /><ActivityIndicator size="large" color={theme.colors[colorScheme].black} /></View> :
     <View style={styles.container}>
       <FocusAwareStatusBar style={colorScheme} />
       
@@ -73,7 +87,7 @@ const Games = () => {
         data={filteredGames}
         renderItem={({item}) => {
           return (
-            <TouchableOpacity style={{...styles.item, height: (segmentIndex === 0 ? 180 : "auto")}} activeOpacity={.8}
+            <TouchableOpacity style={{...styles.item, height: (segmentIndex === 0 ? getItemHeight() : "auto")}} activeOpacity={.8}
             onPress={() => navigation.navigate("Game" as never, {id:item.id, name: item.name, owned:item.owned} as never)}>
               <View style={{...styles.itemImage, display:(segmentIndex === 0 ? "flex" : "none")}} >
                 <ImageBackground source={{ uri: item.banner_image}} resizeMode="cover" style={{...styles.itemImage }}></ImageBackground>
@@ -81,7 +95,7 @@ const Games = () => {
                   <Ionicons name="checkmark" size={30} color={theme.colors.white} />
                 </View>                
               </View>
-              <View style={{...styles.itemList, display:(segmentIndex === 0 ? "none" : "flex")}} >
+              <View style={{...styles.itemList, display:(segmentIndex === 0 ? "none" : "flex"), paddingRight: item.owned ? 100 : 15}} >
                 <Text style={styles.itemListName} >{item.name}</Text>
                 <Text style={styles.itemListPublisher} >{item.publisher}</Text>
                 <Ionicons name="chevron-forward" size={20} color={theme.colors[colorScheme].black} style={styles.itemListArrow} />
@@ -139,7 +153,6 @@ const styles = StyleSheet.create({
   },
   itemList: {
     paddingLeft:15,
-    paddingRight:15,
     paddingTop:15,
     paddingBottom:15,
     borderTopWidth: 1,

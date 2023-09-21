@@ -3,11 +3,13 @@ import { View, Image, Modal, TouchableOpacity, StyleSheet } from 'react-native';
 
 interface ImageViewerProps {
     imageUrl: string;
-    width?:number;
-    height?:number;
+    width?:any;
+    height?:any;
+    style?:any;
+    styleInner?:any;
   }
 
-const ImageViewer: React.FC<ImageViewerProps>= ({ imageUrl, width, height }) => {
+const ImageViewer: React.FC<ImageViewerProps>= ({ imageUrl, width, height, style, styleInner }) => {
     const [modalVisible, setModalVisible] = useState(false);
   
     const handleImagePress = () => {
@@ -17,10 +19,14 @@ const ImageViewer: React.FC<ImageViewerProps>= ({ imageUrl, width, height }) => 
     const closeModal = () => {
       setModalVisible(false);
     };
+
+    const styleObj = style ? style : {};
+    const styleObjInner = styleInner ? styleInner : {};
+    
   
     return (
-      <View>
-        <TouchableOpacity onPress={handleImagePress}>
+      <View style={styleObj}>
+        <TouchableOpacity onPress={handleImagePress} style={styleInner}>
           <Image source={{ uri: imageUrl }} style={{ width: (width ? width : 20), height: (height ? height : 20) }} resizeMode="contain" />
         </TouchableOpacity>
         <Modal visible={modalVisible} onRequestClose={closeModal} transparent={true}>

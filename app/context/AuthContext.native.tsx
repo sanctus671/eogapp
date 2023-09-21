@@ -1,6 +1,6 @@
 import {createContext, useContext, useEffect, useState} from 'react';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import environment from "../constants/environment";
 
 interface AuthProps {
@@ -39,7 +39,7 @@ export const AuthProvider = ({children}:any) => {
 		const loadToken = async () => {
 			try{
 
-				const token = await AsyncStorage.getItem(TOKEN_KEY);
+				const token = await SecureStore.getItemAsync(TOKEN_KEY);
 			
 				
 				if (token){
@@ -95,7 +95,7 @@ export const AuthProvider = ({children}:any) => {
 		axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 		
 		
-		await AsyncStorage.setItem(TOKEN_KEY, token);		
+		await SecureStore.setItemAsync(TOKEN_KEY, token);		
 	}
 
 
@@ -181,7 +181,7 @@ export const AuthProvider = ({children}:any) => {
 			  ready: true
 			});
 		
-			await AsyncStorage.removeItem(TOKEN_KEY);
+			await SecureStore.deleteItemAsync(TOKEN_KEY);
 		  } catch (error) {
 			console.error('Error during logout:', error);
 		  }

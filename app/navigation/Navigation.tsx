@@ -38,7 +38,7 @@ export const Navigation = () => {
               <>
             <Stack.Screen name="Login" component={Login} options={{headerTransparent: false, headerRight:() => (
               <View style={{flexDirection:"row", alignItems:"center"}}>
-                  <TouchableOpacity onPress={registerAnonymous}><Text style={{color:theme.colors.white, paddingRight:5, fontSize:16}}>Skip</Text></TouchableOpacity>
+                  <TouchableOpacity onPress={registerAnonymous}><Text style={{color:theme.colors.white, paddingRight:5, fontSize:16}}>Skip Registration</Text></TouchableOpacity>
               </View>
               )}}></Stack.Screen>
               <Stack.Screen name="Register" component={Register} options={{headerTransparent: false}}></Stack.Screen>

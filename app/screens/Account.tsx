@@ -32,6 +32,7 @@ const Account = () => {
     const [email, setEmail] = useState(''); 
     const [changeNameVisible, setChangeNameVisible] = useState(false);
     const [name, setName] = useState('');
+    const [changeLogoutVisible, setChangeLogoutVisible] = useState(false);
 
     useEffect(() => {
       const fetchPosts = async () => {
@@ -48,9 +49,19 @@ const Account = () => {
     }, []);
 
 
+
+
+
     const logout = async () => {
         const result = await onLogout!();
     }
+
+    const doLogout = () => {
+      setChangeLogoutVisible(false);
+      setTimeout(async () => {logout()},1000);      
+    }
+
+
 
     const showToast = () => {
       Toast.show({
@@ -83,7 +94,8 @@ const Account = () => {
             text1: 'There was an error updating your password.',
             position:"bottom",
             onPress: () => {Toast.hide();setChangePasswordVisible(true)}
-          });          
+          });   
+          return;       
         }
 
   
@@ -109,6 +121,7 @@ const Account = () => {
           position:"bottom",
           onPress: () => {Toast.hide();setChangePasswordVisible(true)}
         });   
+        return;
       }   
 
       Toast.show({
@@ -134,6 +147,7 @@ const Account = () => {
           position:"bottom",
           onPress: () => {Toast.hide();setChangePasswordVisible(true)}
         });  
+        return;
       }  
       Toast.show({
         type: 'success',
@@ -174,7 +188,7 @@ const Account = () => {
           { title: 'Change Name', icon: 'ios-person', onPress: () => {setChangeNameVisible(true)} }, 
           { title: 'Change Email', icon: 'ios-mail', onPress: () => {setChangeEmailVisible(true)} }, 
           { title: 'Change Password', icon: 'ios-key', onPress: () => {setChangePasswordVisible(true)} },
-          { title: 'Logout', icon: 'ios-lock-closed', onPress: () => {logout()} },
+          { title: 'Logout', icon: 'ios-lock-closed', onPress: () => { Platform.OS === "web" ? logout() : setChangeLogoutVisible(true)} },
         ],
       }
   
@@ -269,6 +283,17 @@ const Account = () => {
                 <Dialog.Button color={theme.colors.accent} label="Cancel" onPress={() => {setChangeNameVisible(false)}} />
                 <Dialog.Button color={theme.colors.accent} label="Change" bold={true} onPress={() => {changeName()}} />
               </Dialog.Container> 
+
+              <Dialog.Container visible={changeLogoutVisible} onBackdropPress={() => {setChangeLogoutVisible(false)}} onRequestClose={() => {setChangeLogoutVisible(false)}}>
+                <Dialog.Title>Logout</Dialog.Title>
+                <Dialog.Description>
+                You are about to logout of your account. Are you sure you want to continue?
+                </Dialog.Description>  
+                <Dialog.Button color={theme.colors.accent} label="Cancel" onPress={() => {setChangeLogoutVisible(false)}} />
+                <Dialog.Button color={theme.colors.accent} label="Logout" bold={true} onPress={() => {doLogout()}} />
+              </Dialog.Container> 
+
+
             </>
 
             : <></>

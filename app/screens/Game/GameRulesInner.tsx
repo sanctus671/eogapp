@@ -1,4 +1,4 @@
-import { Appearance, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Appearance, KeyboardAvoidingView, LogBox, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { ReactElement, ReactNode, useEffect, useState } from 'react'
 import { useNavigation, useRoute } from '@react-navigation/native';
 import theme from '../../constants/theme';
@@ -6,6 +6,7 @@ const globalColorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "lig
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Accordion from '../../components/Accordian';
+LogBox.ignoreLogs(['Non-serializable values']);
 
 type ThemeOptions = 'dark' | 'light';
 
@@ -13,6 +14,7 @@ type RouteParams = {
   innerItem:any;
   outsideColorScheme:ThemeOptions;
   changeColorScheme:() => void;
+  outsideSearch:string;
 };
 
 type NavProps = {
@@ -22,27 +24,11 @@ type RenderFunction = (child: ReactNode) => ReactNode;
 const GameRulesInner = ({ navigation }: NavProps) => {
 
   const route = useRoute();
-  const { innerItem, outsideColorScheme, changeColorScheme } = route.params as RouteParams;
+  const { innerItem, outsideColorScheme, changeColorScheme, outsideSearch } = route.params as RouteParams;
   const [ preItems, setPreItems ] = useState([]);
-  const [colorScheme, setColorScheme] = React.useState<ThemeOptions>(outsideColorScheme)
+  const [colorScheme, setColorScheme] = React.useState<ThemeOptions>(outsideColorScheme);
 
-
-  let preContentItems = [...innerItem.contentItems];
-
-
-  let subItemCount = 0;
-
-  for (let contentSubItem of innerItem.contentSubItems){
-    subItemCount += contentSubItem.contentItems.length;
-  }
-
-
-
-  preContentItems.splice(-(subItemCount + innerItem.contentSubItems.length));
-
-
-
-  const [search, setSearch] = React.useState('');
+  const [search, setSearch] = React.useState(outsideSearch ? outsideSearch : '');
   const [filteredGameRules, setFilteredGameRules] = useState<Array<any>>([]);
 
 
@@ -56,6 +42,31 @@ const GameRulesInner = ({ navigation }: NavProps) => {
   
     return "";
   };
+
+
+  let preContentItems = [];
+
+  if (innerItem.contentSubItems && innerItem.contentSubItems.length > 0){
+
+    let firstTitle = innerItem.contentSubItems[0].title;
+
+    for (let innerItemNode of innerItem.contentItems){
+      let nodeText = getNodeText(innerItemNode);
+      if (nodeText === firstTitle){
+        break;
+      }
+      preContentItems.push(innerItemNode);
+    }
+
+  }
+  else{
+    preContentItems = [...innerItem.contentItems];
+  }
+
+
+
+
+
 
      // Define the filter logic
 
@@ -109,13 +120,13 @@ const GameRulesInner = ({ navigation }: NavProps) => {
         headerTintColor: theme.colors[globalColorScheme].black ,       
         headerSearchBarOptions: {
           onChangeText: (event:any) => setSearch(event.nativeEvent.text),
-          barTintColor:theme.colors[globalColorScheme].searchBarBackground, tintColor:theme.colors[colorScheme].black, textColor: theme.colors[globalColorScheme].black, headerIconColor: theme.colors[globalColorScheme].lightgrey,
+          barTintColor:theme.colors[globalColorScheme].searchBarBackground, tintColor:theme.colors[colorScheme].black, textColor: theme.colors[globalColorScheme].black, headerIconColor: (Platform.OS === "android" ? theme.colors[globalColorScheme].tabBarIcon : theme.colors[globalColorScheme].lightgrey),
           placeholder: "Search rules",
           hideWhenScrolling:false
         },
         headerRight: () => (
 
-          <TouchableOpacity onPress={() => {toggleColorScheme()}} activeOpacity={0.7} style={{paddingLeft:20, paddingVertical:10, paddingRight:0}}>
+          <TouchableOpacity onPress={() => {toggleColorScheme()}} activeOpacity={0.7} style={{paddingLeft:20, paddingVertical:10, paddingRight:Platform.OS === "ios" ? 0 : 10}}>
             <Ionicons name={colorScheme === 'dark' ? 'bulb-outline' : 'bulb'} color={theme.colors[globalColorScheme].tabBarIcon} size={22}></Ionicons>
           </TouchableOpacity>
 
@@ -123,6 +134,7 @@ const GameRulesInner = ({ navigation }: NavProps) => {
       )          
       });
     }, [navigation, colorScheme]);
+
 
     const toggleColorScheme = () => {
       setColorScheme((prevColorScheme) =>
@@ -182,7 +194,7 @@ const GameRulesInner = ({ navigation }: NavProps) => {
       <KeyboardAvoidingView behavior={'height'} style={styles.container}>
         <ScrollView style={{ ...styles.container, backgroundColor: theme.colors[colorScheme].white }} contentInsetAdjustmentBehavior="automatic">
           {preContentItems.length > 0 && (
-            <View style={{ ...styles.contentContainer, backgroundColor: theme.colors[colorScheme].accordianBackground }} key="preContent">
+            <View style={{ paddingTop:15,paddingBottom:0,paddingHorizontal:15, backgroundColor: theme.colors[colorScheme].accordianBackground }} key="preContent">
               <Text style={{ ...styles.contentText, color: theme.colors[colorScheme].black }}>
                 {preContentItems.map((preContentItem: any, preContentIndex: number) => (
                   <Text key={preContentIndex}>{search ? renderHighlightedText(preContentItem) : preContentItem}</Text>
@@ -221,6 +233,7 @@ const styles = StyleSheet.create(   {
   },
   contentText: {
     fontSize: 14,
+    lineHeight:22
   },
   specialHeading: {
     paddingHorizontal: 15,

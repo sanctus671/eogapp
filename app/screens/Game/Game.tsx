@@ -1,4 +1,4 @@
-import { Appearance, ImageBackground, StyleSheet, Text, View, Image, Linking, Platform, TouchableOpacity, ScrollView, KeyboardAvoidingView } from 'react-native'
+import { Appearance, ImageBackground, StyleSheet, Text, View, Image, Linking, Platform, TouchableOpacity, ScrollView, KeyboardAvoidingView, LogBox } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import theme from '../../constants/theme';
 import FocusAwareStatusBar from '../../components/FocusAwareStatusBar';
 const colorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
+LogBox.ignoreLogs(['Non-serializable values', 'Task orphaned']);
 
 type RouteParams = {
     id: number;

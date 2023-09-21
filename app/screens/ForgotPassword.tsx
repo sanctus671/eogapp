@@ -9,6 +9,7 @@ import {
   } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
+import Toast, { BaseToast } from 'react-native-toast-message';
 
 const colorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
 
@@ -30,11 +31,21 @@ const ForgotPassword = () => {
 
     const result = await onResetPassword!(email);
 
+    setLoading(false);
+
     if (result && result.error){
         setError(result.msg);
+        return;
     }
 
-    setLoading(false);
+    Toast.show({
+        type: 'success',
+        text1: 'Recovery email has been sent.',
+        position:"bottom",
+        onPress: () => {Toast.hide()}
+      });
+
+      setEmail("");
 
 };
 
@@ -66,7 +77,13 @@ const ForgotPassword = () => {
 
             </KeyboardAvoidingView>
 
-
+            <Toast config={{  
+                success: (props:any) => 
+                ( <BaseToast {...props} style={
+                { backgroundColor:theme.colors[colorScheme].lightgrey, borderLeftColor: theme.colors.secondary }} text1Style={{color:theme.colors[colorScheme].black}}
+                />  
+                )   
+                }} />
 
 
         </View>

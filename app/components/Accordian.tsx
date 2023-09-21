@@ -140,8 +140,7 @@ const styles = StyleSheet.create({
     borderColor:"#d1d1d6"
   },
   headerText: {
-    fontSize: 14,
-    textTransform:"capitalize"
+    fontSize: 14
 
 
   },
