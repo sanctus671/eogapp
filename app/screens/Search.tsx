@@ -40,9 +40,10 @@ const Search = () => {
   
   useEffect(() => {
     const filterGames = games.filter((item) =>
-      (item.name.toLowerCase().includes(search.toLowerCase()) || item.name.replace(/[^\w\s]/g, '').toLowerCase().includes(search.toLowerCase()))
+      (item.name.toLowerCase().includes(search.toLowerCase()) || item.name.replace(/[^\w\s]/g, '').toLowerCase().includes(search.toLowerCase())) && item.rules_file
     );
-  
+
+	
     setFilteredGames(filterGames);
   }, [search, games]);
 

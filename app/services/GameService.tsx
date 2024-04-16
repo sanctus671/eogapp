@@ -57,8 +57,12 @@ export const formatGameRules = (gameRules:string) => {
       let isAfterHeading = false;
       let hasImageInHeading = false;
       for (let ruleItemSection of ruleItemSections){
+
+        if (!ruleItemSection.class && ruleItemSection.tag){
+            ruleItemSection.class = ruleItemSection.tag;
+        }
    
-        if (ruleItemSection.class.includes("h1") /*ruleItemSection.class === "h1" */){
+        if (ruleItemSection.class && ruleItemSection.class.includes("h1") /*ruleItemSection.class === "h1" */){
 
           if (currentSubSection.title){
             currentSection.contentSubItems.push(currentSubSection);
@@ -85,7 +89,7 @@ export const formatGameRules = (gameRules:string) => {
         else{
           //its a child of the current section
        
-          if (["h1", "h2", /*"h3", "h4", "h5", "h6"*/].some(heading => ruleItemSection.class.includes(heading))){ //heading within section means full page
+          if (["h1", "h2", /*"h3", "h4", "h5", "h6"*/].some(heading => ruleItemSection.class && ruleItemSection.class.includes(heading))){ //heading within section means full page
             //mark this section as a full page
             currentSection.fullPage = true;
 
@@ -173,6 +177,13 @@ export const formatGameRules = (gameRules:string) => {
 
 
             for (let [index, ruleItemSectionChild] of ruleItemSection.children.entries()) {
+
+
+
+                if (!ruleItemSectionChild.class && ruleItemSectionChild.tag){
+                    ruleItemSectionChild.class = ruleItemSectionChild.tag;
+                }
+
               if (ruleItemSectionChild.tag === "span"){
                 //bold colored text
 
@@ -210,6 +221,15 @@ export const formatGameRules = (gameRules:string) => {
 
 
                   for (let [childIndex, ruleItemSectionChildChild] of ruleItemSectionChild.children.entries()) {
+
+
+
+                    if (!ruleItemSectionChildChild.class && ruleItemSectionChildChild.tag){
+                        ruleItemSectionChildChild.class = ruleItemSectionChildChild.tag;
+                    }
+
+
+
                     if (ruleItemSectionChildChild.tag === "img"){
 
                       let preContent = innerContent.split("{img}", 1);

@@ -38,7 +38,7 @@ const Games = () => {
   
   useEffect(() => {
     const filterGames = games.filter((item) =>
-      (item.name.toLowerCase().includes(search.toLowerCase()) || item.name.replace(/[^\w\s]/g, '').toLowerCase().includes(search.toLowerCase())) && item.owned
+      (item.name.toLowerCase().includes(search.toLowerCase()) || item.name.replace(/[^\w\s]/g, '').toLowerCase().includes(search.toLowerCase())) && item.owned && item.rules_file
     );
   
     setFilteredGames(filterGames);
