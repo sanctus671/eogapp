@@ -18,7 +18,7 @@
       "supportsTablet": true,
       "config": {
         "usesNonExemptEncryption": false
-      }      
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -28,6 +28,10 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-font",
+      "expo-secure-store"
+    ]
   }
 }
