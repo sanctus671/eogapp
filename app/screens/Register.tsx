@@ -94,7 +94,7 @@ const Register = () => {
                     style={{...theme.layout.button, ...styles.button, marginTop:20, opacity: (isLoading ? 0.7 : 1)}}
                     onPress={register}
                     disabled={isLoading}>
-                    <Text style={{textAlign:'center', color:theme.colors.white}}>Sign Up</Text>
+                    <Text style={{textAlign:'center', color:theme.colors.white, fontSize:16,lineHeight:16,fontWeight:700}}>Sign Up</Text>
                     {isLoading && <ActivityIndicator style={styles.loadingIndicator} size="small" color={theme.colors.white} />}
                 </TouchableOpacity>
 
@@ -128,7 +128,8 @@ const styles = StyleSheet.create({
   textInput: {
       borderColor:theme.colors[colorScheme].lightgrey, 
       color: theme.colors[colorScheme].black,
-      marginTop:15
+      marginTop:15,
+      fontSize:16
   },
   button: {
       backgroundColor:theme.colors.accent,

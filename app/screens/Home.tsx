@@ -32,21 +32,20 @@ const Home = () => {
   return (
     <View style={styles.container}>
       <FocusAwareStatusBar style={colorScheme} />
-      <Image style={{width:330,height:240}}  source={require("../../assets/logo.png")}     />
-      <Image style={{width:230,height:140, marginTop:15, marginBottom:10}}  source={require("../../assets/apptitle.png")}     />
+      <Image style={{width:230,height:280, marginBottom:10}}  source={require("../../assets/tabletopcodex.png")}     />
       <TouchableOpacity
                     activeOpacity={.7}
-                    style={{...theme.layout.button, ...styles.button}}
+                    style={{...theme.layout.button, ...styles.button,backgroundColor:theme.colors.accent}}
                     onPress={() => navigation.navigate("SearchWrapper" as never)}>
-                    <Text style={{textAlign:'center', color:theme.colors.white,fontSize:16}}>Find Games</Text>
+                    <Text style={{textAlign:'center', color:theme.colors.white,fontSize:16, fontWeight:"700"}}>Find Games</Text>
                 </TouchableOpacity>
 
 
       <TouchableOpacity
           activeOpacity={.7}
-          style={{...theme.layout.button, ...styles.button}}
+          style={{...theme.layout.button, ...styles.button, backgroundColor:theme.colors.accent}}
           onPress={() => navigation.navigate("GamesWrapper" as never)}>
-          <Text style={{textAlign:'center', color:theme.colors.white,fontSize:16}}>My Games</Text>
+          <Text style={{textAlign:'center', color:theme.colors.white,fontSize:16, fontWeight:"700"}}>My Games</Text>
       </TouchableOpacity>
 
 
@@ -69,7 +68,6 @@ const styles = StyleSheet.create({
     paddingBottom:15
   },
     button: {
-        backgroundColor:theme.colors.accent,
         maxWidth:"100%",
         width:200,
         flexDirection:"row",

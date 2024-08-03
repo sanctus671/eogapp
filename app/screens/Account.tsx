@@ -1,5 +1,5 @@
 import { Alert, Appearance, Platform, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { StatusBar } from 'expo-status-bar';
@@ -9,7 +9,8 @@ import theme from '../constants/theme';
 import Toast, { BaseToast } from 'react-native-toast-message';
 import FocusAwareStatusBar from '../components/FocusAwareStatusBar';
 import * as userService from '../services/UserService';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 const colorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
 
@@ -23,7 +24,7 @@ interface SectionData {
 
 
 const Account = () => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<NativeStackNavigationProp<any>>();
     const { authState, onLogout } = useAuth();  
     const [changePasswordVisible, setChangePasswordVisible] = useState(false);
     const [password, setPassword] = useState('');
@@ -33,20 +34,29 @@ const Account = () => {
     const [changeNameVisible, setChangeNameVisible] = useState(false);
     const [name, setName] = useState('');
     const [changeLogoutVisible, setChangeLogoutVisible] = useState(false);
+    const [user, setUser] = useState<any>({});
 
-    useEffect(() => {
-      const fetchPosts = async () => {
-        try {
-          const fetchedUser:any = await userService.getUserData();
-          setEmail(fetchedUser.email);
-          setName(fetchedUser.name);
-        } catch (error) {
-          console.error('Error fetching posts:', error);
-        }
-      };
-  
-      fetchPosts();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+          const fetchPosts = async () => {
+            try {
+              const fetchedUser = await userService.getUserData();
+              setEmail(fetchedUser.email);
+              setName(fetchedUser.name);
+              setUser(fetchedUser);
+            } catch (error) {
+              console.error('Error fetching posts:', error);
+            }
+          };
+      
+          fetchPosts();
+      
+          // Clean-up function, if needed, can be returned here
+          return () => {
+            // Clean up any resources or subscriptions if necessary
+          };
+        }, [])
+      );
 
 
 
@@ -165,8 +175,8 @@ const Account = () => {
   
     const writeReview = () => {
       const storeUrl = Platform.OS === 'ios'
-      ? 'itms-apps://itunes.apple.com/app/[YOUR_APP_ID]?mt=8' 
-      : 'market://details?id=[YOUR_PACKAGE_NAME]'; 
+      ? 'https://itunes.apple.com/WebObjects/MZStore.woa/wa/viewSoftware?id=6596741021&mt=8' 
+      : 'market://details?id=com.tabletopcodex.app'; 
   
       openLink(storeUrl);
     }
@@ -176,19 +186,27 @@ const Account = () => {
       {
         title: 'Support',
         data: [
-          { title: 'Rate The App', icon: 'ios-heart', onPress: () => {writeReview()} },
-          { title: 'Follow Us', icon: 'logo-facebook', onPress: () => () => {openLink("https://www.facebook.con/eogapp")} },
-          { title: 'Contact Us', icon: 'ios-mail', onPress: () => {openLink("mailto:support@orderofgamers.com")} },
+          { title: 'Rate The App', icon: 'heart', onPress: () => {writeReview()} },
+          { title: 'Subscribe', icon: 'logo-youtube', onPress: () => {openLink("https://www.youtube.com/user/EsotericOrderGamers")} },
+          { title: 'Contact Us', icon: 'mail', onPress: () => {openLink("mailto:head@orderofgamers.com")} },
         ],
       },
       {
         title: 'Account',
         data: [
-          { title: 'View Purchases', icon: 'ios-cash', onPress: () => {navigation.navigate("Purchases" as never) }},
-          { title: 'Change Name', icon: 'ios-person', onPress: () => {setChangeNameVisible(true)} }, 
-          { title: 'Change Email', icon: 'ios-mail', onPress: () => {setChangeEmailVisible(true)} }, 
-          { title: 'Change Password', icon: 'ios-key', onPress: () => {setChangePasswordVisible(true)} },
-          { title: 'Logout', icon: 'ios-lock-closed', onPress: () => { Platform.OS === "web" ? logout() : setChangeLogoutVisible(true)} },
+          { title: 'Upgrade', icon: 'arrow-up-circle', onPress: () => {
+            if (user.premium){
+                Alert.alert("Premium Owned", "You have already purchased premium.")
+            }
+            else{
+                navigation.navigate("Upgrade", {setGameOwned:() => {}});
+            }
+            
+          }},
+          { title: 'Change Name', icon: 'person', onPress: () => {setChangeNameVisible(true)} }, 
+          { title: 'Change Email', icon: 'mail', onPress: () => {setChangeEmailVisible(true)} }, 
+          { title: 'Change Password', icon: 'key', onPress: () => {setChangePasswordVisible(true)} },
+          { title: 'Logout', icon: 'lock-closed', onPress: () => { Platform.OS === "web" ? logout() : setChangeLogoutVisible(true)} },
         ],
       }
   
@@ -206,7 +224,7 @@ const Account = () => {
             renderItem={({ item }) => (
                 <TouchableOpacity style={styles.item} onPress={item.onPress} activeOpacity={.7}>
                     <Ionicons name={item.icon} size={20} color={theme.colors[colorScheme].black} style={styles.icon} />
-                    <Text style={styles.title}>{item.title}</Text>
+                    <Text style={styles.title}>{item.title === "Upgrade" && user.premium ? "Premium Purchased" : item.title}</Text>
                     <View style={styles.chevronContainer}>
                         <Ionicons name="chevron-forward" size={24} color={theme.colors[colorScheme].grey} />
                     </View>

@@ -7,6 +7,7 @@ import * as purchaseService from '../../services/PurchaseService';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import ImageViewer from '../../components/ImageViewer';
+import FocusAwareStatusBar from '../../components/FocusAwareStatusBar';
 
 
   type GameProps = {
@@ -19,7 +20,7 @@ import ImageViewer from '../../components/ImageViewer';
     id:number
   };
   type NavProps = {
-    navigation: NativeStackNavigationProp<{}>;
+    navigation: NativeStackNavigationProp<any>;
   };
 
 
@@ -35,7 +36,7 @@ const GameInfo = ({ navigation }: NavProps) => {
                 (Platform.OS === "ios" ? 
                 <TouchableOpacity
                 onPress={() => {
-                    navigation.navigate("Game" as never, {id: id, owned:true, name: ""} as never)
+                    navigation.navigate("Game", {id: id, owned:true, name: ""})
                 }}
                 style={{ paddingTop:10,paddingBottom:10, paddingLeft:10, paddingRight:0 }}
                 >
@@ -100,6 +101,7 @@ const GameInfo = ({ navigation }: NavProps) => {
             <View style={{flex:1, alignItems:"center", justifyContent: "center", backgroundColor: theme.colors[colorScheme].white}}><ActivityIndicator size="large" color={theme.colors[colorScheme].black} /></View> : 
             (
         <ScrollView style={styles.container} contentInsetAdjustmentBehavior="automatic">
+      {Platform.OS === "ios" ? <FocusAwareStatusBar style={"light"} /> : null }
             <View style={{...styles.gameBanner, height: getItemHeight()}}>
                 <ImageBackground source={{ uri: game.banner_image}} resizeMode="cover" style={{...styles.gameBanner, flex:1 }}></ImageBackground>
             </View>

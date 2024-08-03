@@ -1,4 +1,4 @@
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import { View, Text, Button, TextInput, Platform, StyleSheet, TouchableOpacity } from 'react-native'
 import { useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
@@ -8,6 +8,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import theme from "../constants/theme";
 import Register from "../screens/Register";
 import ForgotPassword from "../screens/ForgotPassword";
+import Upgrade from "../screens/Upgrade";
 
 
 const Stack = createNativeStackNavigator();
@@ -32,6 +33,32 @@ export const Navigation = () => {
           { authState?.authenticated ? 
             (<>
             <Stack.Screen name="Tabs" component={Tabs} options={{headerShown:false}}></Stack.Screen>
+            <Stack.Screen 
+                            name="Upgrade" 
+                            component={Upgrade} 
+                            options={({ navigation }) => ({
+
+
+
+                                animation: (Platform.OS === "android" ? "fade_from_bottom" : "default"),
+                                title:"Upgrade",
+                                presentation: "modal",
+                                headerLargeTitle: false,
+                                headerTransparent: false,
+                                headerLargeStyle: { backgroundColor: theme.colors.darkgrey },
+                                headerStyle: { backgroundColor: theme.colors.darkgrey },
+                                headerRight: () => (
+                                    Platform.OS === "ios" ? 
+                                        <TouchableOpacity
+                                            onPress={() => navigation.goBack()}
+                                            style={{ paddingTop: 10, paddingBottom: 10, paddingLeft: 10, paddingRight: 0 }}
+                                        >
+                                            <Text style={{ color: theme.colors.accent, fontSize: 16 }}>Close</Text>
+                                        </TouchableOpacity> 
+                                        : <></>
+                                )
+                            })} 
+                        />
             </> )
             :
             (

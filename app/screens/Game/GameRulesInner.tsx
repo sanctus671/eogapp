@@ -119,10 +119,18 @@ const GameRulesInner = ({ navigation }: NavProps) => {
         headerTitleStyle:{color:theme.colors[globalColorScheme].black}, 
         headerTintColor: theme.colors[globalColorScheme].black ,       
         headerSearchBarOptions: {
-          onChangeText: (event:any) => setSearch(event.nativeEvent.text),
+          onChangeText: (event:any) => {
+            if (event.nativeEvent.text === "" && outsideSearch){
+                navigation.setOptions({headerSearchBarOptions: {placeholder: "Search rules", hideWhenScrolling:false, barTintColor:theme.colors[globalColorScheme].searchBarBackground, tintColor:theme.colors[colorScheme].black, textColor: theme.colors[globalColorScheme].black, headerIconColor: (Platform.OS === "android" ? theme.colors[globalColorScheme].tabBarIcon : theme.colors[globalColorScheme].lightgrey),}})
+            }
+            setSearch(event.nativeEvent.text)
+            
+          },
           barTintColor:theme.colors[globalColorScheme].searchBarBackground, tintColor:theme.colors[colorScheme].black, textColor: theme.colors[globalColorScheme].black, headerIconColor: (Platform.OS === "android" ? theme.colors[globalColorScheme].tabBarIcon : theme.colors[globalColorScheme].lightgrey),
-          placeholder: "Search rules",
-          hideWhenScrolling:false
+          placeholder: outsideSearch  ? outsideSearch : "Search rules",
+          hideWhenScrolling:false,
+          
+          
         },
         headerRight: () => (
 
@@ -134,6 +142,9 @@ const GameRulesInner = ({ navigation }: NavProps) => {
       )          
       });
     }, [navigation, colorScheme]);
+
+
+
 
 
     const toggleColorScheme = () => {

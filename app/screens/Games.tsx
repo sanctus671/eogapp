@@ -3,11 +3,13 @@ import React, { useEffect, useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
 import theme from '../constants/theme';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 const colorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
 import { Ionicons } from '@expo/vector-icons';
 import FocusAwareStatusBar from '../components/FocusAwareStatusBar';
 import * as gameService from '../services/GameService';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as userService from '../services/UserService';
 
 
 
@@ -15,26 +17,55 @@ const Games = () => {
   const [segmentIndex, setSegmentIndex] = useState(0);
 
   const [search, setSearch] = React.useState('');
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<any>>();
 
   const [games, setGames] = useState<Array<any>>([]);
+  const [freeGames, setFreeGames] = useState<Array<number>>([]);
+  const [user, setUser] = useState<any>({});
   const [filteredGames, setFilteredGames] = useState<Array<any>>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const fetchedGames = await gameService.getGames();
-        setGames(fetchedGames.data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching posts:', error);
-        setLoading(false);
-      }
-    };
   
-    fetchPosts();
+    
   }, []);
+
+  const fetchUser = async () => {
+    const fetchedUser:any = await userService.getUserData();
+    setUser(fetchedUser);
+  }
+
+
+  const fetchPosts = async () => {
+    try {
+      const fetchedGames = await gameService.getGames();
+      setGames(fetchedGames.data);
+      
+      setLoading(false);
+
+      setFreeGames(fetchedGames.free);
+
+
+
+
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      setLoading(false);
+    }
+  };
+
+
+  useFocusEffect(
+    React.useCallback(() => {
+        fetchPosts();
+      fetchUser();
+      return () => {
+   
+      };
+    }, [])
+  );
+
+  
   
   useEffect(() => {
     const filterGames = games.filter((item) =>
@@ -52,9 +83,10 @@ const Games = () => {
     navigation.setOptions({
       headerSearchBarOptions: {
         onChangeText: (event:any) => setSearch(event.nativeEvent.text),
-        barTintColor:theme.colors[colorScheme].searchBarBackground, tintColor:theme.colors.white, textColor: theme.colors[colorScheme].black, headerIconColor: theme.colors[colorScheme].lightgrey,
+        barTintColor:theme.colors[colorScheme].searchBarBackground, tintColor:theme.colors.white, textColor: theme.colors[colorScheme].black, headerIconColor: theme.colors[colorScheme].lightgrey, 
         placeholder: "Search my games",
-        hideWhenScrolling:false
+        hideWhenScrolling:false,
+    
       },
       
     });
@@ -88,7 +120,14 @@ const Games = () => {
         renderItem={({item}) => {
           return (
             <TouchableOpacity style={{...styles.item, height: (segmentIndex === 0 ? getItemHeight() : "auto")}} activeOpacity={.8}
-            onPress={() => navigation.navigate("Game" as never, {id:item.id, name: item.name, owned:item.owned} as never)}>
+            onPress={() => 
+            {
+                console.log("here");
+                console.log(freeGames)
+                navigation.navigate("Game", {id:item.id, name: item.name, owned:freeGames.includes(item.id) || user.premium})
+            }
+            
+            }>
               <View style={{...styles.itemImage, display:(segmentIndex === 0 ? "flex" : "none")}} >
                 <ImageBackground source={{ uri: item.banner_image}} resizeMode="cover" style={{...styles.itemImage }}></ImageBackground>
                 <View style={{...styles.itemListOwned, right:15, bottom:15, display: (item.owned ? "flex" : "none")}}>

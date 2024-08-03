@@ -5,6 +5,8 @@ import * as gameService from '../../services/GameService';
 const colorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
 import * as purchaseService from '../../services/PurchaseService';
 import ImageViewer from '../../components/ImageViewer';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 
   type GameProps = {
@@ -15,16 +17,10 @@ import ImageViewer from '../../components/ImageViewer';
 
 
 
-const GamePurchase = ({ id }: {id: number}) => {
+const GamePurchase = ({ id, setGameOwned }: {id: number, setGameOwned: (owned:boolean) => void}) => {
 
-
-    const productId = "com.eogapp.app.game"; //TODO update with product data once inapp products are created
-    const priceTiers:any = {
-        "tier1" : "$1.99",
-        "tier2" : "$2.99",
-        "tier3" : "$3.99"
-    }
     const [loading, setLoading] = useState(true);
+    const navigation = useNavigation<NativeStackNavigationProp<any>>();
 
     const [game, setGame] = useState<GameProps>({
         id: id
@@ -52,82 +48,13 @@ const GamePurchase = ({ id }: {id: number}) => {
       }, []);
 
 
-    const restorePurchase = async () => { 
-        // IAPs do not work in Expo Go :(
-        if (Platform.OS !== "ios" && Platform.OS !== "android") return false;
-    
-        const InAppPurchases = await import("expo-in-app-purchases");
-    
-        try {
-          await InAppPurchases.connectAsync();
-    
-          const { results } = await InAppPurchases.getPurchaseHistoryAsync();
-    
-          for (const result of results || []) {
-            if (result.productId.indexOf(productId) > -1 && result.acknowledged) {
-              
-    
-                await purchaseService.createPurchase({game_id:id});
-
-              await InAppPurchases.disconnectAsync();
-              return true;
-            }
-          }
-          await InAppPurchases.disconnectAsync();
-          return false;
-        } catch (e) {
-          await InAppPurchases.disconnectAsync();
-          throw e;
-        }
-    }    
 
     const buy = async(
     item: string,
     onSuccess: () => Promise<void> | void
     ) => {
-    // IAPs do not work in Expo Go :(
-    if (Platform.OS !== "ios" && Platform.OS !== "android") return false;
-
-    const InAppPurchases = await import("expo-in-app-purchases"),
-        { IAPResponseCode } = await import("expo-in-app-purchases");
-
-    try {
-        await InAppPurchases.connectAsync();
-
-        await InAppPurchases.getProductsAsync([item]);
-
-        InAppPurchases.purchaseItemAsync(item).then((_) => {});
-
-        return await new Promise((resolve, reject) => {
-        InAppPurchases.setPurchaseListener(async (result) => {
-            switch (result.responseCode) {
-            case IAPResponseCode.OK:
-            case IAPResponseCode.DEFERRED:
-                await onSuccess();
-                await InAppPurchases.finishTransactionAsync(
-                result.results![0],
-                false
-                );
-
-    
-                await purchaseService.createPurchase({game_id:id});
-
-
-                await InAppPurchases.disconnectAsync();
-                return resolve(true);
-            case IAPResponseCode.USER_CANCELED:
-                await InAppPurchases.disconnectAsync();
-                return resolve(false);
-            case IAPResponseCode.ERROR:
-                await InAppPurchases.disconnectAsync();
-                return reject(new Error("IAP Error: " + result.errorCode));
-            }
-        });
-        });
-    } catch (e) {
-        await InAppPurchases.disconnectAsync();
-        throw e;
-    }
+        navigation.navigate("Upgrade", {setGameOwned:setGameOwned})
+        //await purchaseService.createPurchase({game_id:id});
     }
 
     const getItemHeight = () => {
@@ -151,7 +78,7 @@ const GamePurchase = ({ id }: {id: number}) => {
         (loading ? 
             <View style={{flex:1, alignItems:"center", justifyContent: "center"}}><ActivityIndicator size="large" color={theme.colors[colorScheme].black} /></View> : 
             (
-        <ScrollView style={styles.container} contentInsetAdjustmentBehavior="automatic">
+        <ScrollView style={styles.container} contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{paddingBottom:60}}>
             <View style={{...styles.gameBanner, height: getItemHeight()}}>
                 <ImageBackground source={{ uri: game.banner_image}} resizeMode="cover" style={{...styles.gameBanner, flex:1 }}></ImageBackground>
             </View>
@@ -221,12 +148,9 @@ const GamePurchase = ({ id }: {id: number}) => {
 
 
             <View style={styles.gamePurchase}>
-                <Text style={styles.gamePurchaseTitle}>Buy the rules & reference</Text>
-                <TouchableOpacity style={styles.gamePurchaseButton} activeOpacity={.8} onPress={() => buy} >
-                        <Text style={styles.gamePurchaseName}>{game.name}</Text>
-                        {(game.price_tier ? 
-                        <Text style={styles.gamePurchasePrice}>{priceTiers[game.price_tier]}</Text>
-                        : <></>)}
+                <Text style={styles.gamePurchaseTitle}>Upgrade to unlock the rules & reference</Text>
+                <TouchableOpacity style={styles.gamePurchaseButton} activeOpacity={.8} onPress={() => navigation.navigate("Upgrade", {setGameOwned:setGameOwned})} >
+                        <Text style={styles.gamePurchaseName}>Upgrade to unlock</Text>
                         
                 </TouchableOpacity>        
             </View>
@@ -314,19 +238,18 @@ const styles = StyleSheet.create({
     gamePurchaseButton: {
         backgroundColor: theme.colors.accent,
         flexDirection: "row",
-        justifyContent: "space-between",
+        justifyContent: "center",
         alignItems:"center",
         flex:1,
-        paddingLeft:15,
-        paddingRight:15,
-        paddingTop:6,
-        paddingBottom:6,
+        paddingHorizontal:16,
+        paddingTop:14,
+        paddingBottom:14,
         marginTop:10
     },
     gamePurchaseName: {
-        color:theme.colors.white,
-        fontSize:13,
-        fontWeight:"500"
+        color:theme.colors.white, 
+        fontSize:16,
+        fontWeight: "700"
         },
     gamePurchasePrice: {
         color: theme.colors.white,

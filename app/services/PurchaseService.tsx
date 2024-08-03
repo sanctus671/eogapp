@@ -23,3 +23,13 @@ export const createPurchase = async (purchase:any) => {
       handleApiError(error);
     }
   };
+
+
+  export const removePurchase = async (purchase:any) => {
+      try {
+        const response = await axios.delete(API_URL + '/purchases/' + purchase.game_id);
+        return response;
+      } catch (error) {
+        handleApiError(error);
+      }
+    };

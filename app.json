@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Universal Board Game Rule Book",
+    "name": "Tabletop Codex",
     "slug": "eogapp",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -18,20 +18,29 @@
       "supportsTablet": true,
       "config": {
         "usesNonExemptEncryption": false
-      }
+      },
+      "bundleIdentifier": "com.tabletopcodex.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#52595d"
-      }
+      },
+      "bundleIdentifier": "com.tabletopcodex.app",
+      "package": "com.tabletopcodex.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-font",
-      "expo-secure-store"
-    ]
+      "expo-secure-store",
+      "react-native-iap"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e8608f94-25ee-40a6-b40d-678b09faa2dd"
+      }
+    }
   }
 }

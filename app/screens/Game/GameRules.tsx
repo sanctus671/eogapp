@@ -5,9 +5,13 @@ import * as gameService from '../../services/GameService';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons, Feather } from '@expo/vector-icons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Accordion from '../../components/Accordian';
 import ImageViewer from '../../components/ImageViewer';
 const globalColorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
+import * as purchaseService from '../../services/PurchaseService';
+import Toast, { BaseToast } from 'react-native-toast-message';
+import FocusAwareStatusBar from '../../components/FocusAwareStatusBar';
 type ThemeOptions = 'dark' | 'light';
 LogBox.ignoreLogs(['Non-serializable values', "Each child in a list"]);
 
@@ -37,7 +41,7 @@ const GameRules = ({ id }: {id: number}) => {
     const [selectedRulesInnerIndex, setSelectedRulesInnerIndex] = React.useState<number | null>(null);
     const [selectedRulesInnerPreContentItems, setSelectedRulesInnerPreContentItems] = React.useState<Array<any>>([]);
 
-
+    const [owned, setOwned] = useState(false);
 
 
     const toggleColumn = () => {
@@ -57,6 +61,35 @@ const GameRules = ({ id }: {id: number}) => {
           headerBackVisible:true  ,
           headerRight: () => (   
             <View style={{display:'flex', flexDirection:"row"}}>
+                
+            <TouchableOpacity onPress={async () => {
+                if (owned){
+                    setOwned(false);
+                    Toast.show({
+                        type: 'success',
+                        text1: 'Game removed from your library.',
+                        position:"bottom",
+                        onPress: () => {Toast.hide();}
+                      }); 
+                    await purchaseService.removePurchase({game_id:id});                   
+                }
+                else{
+                    
+                    setOwned(true);
+                    Toast.show({
+                        type: 'success',
+                        text1: 'Game added to your library.',
+                        position:"bottom",
+                        onPress: () => {Toast.hide();}
+                      }); 
+                    await purchaseService.createPurchase({game_id:id});
+                }
+                }} activeOpacity={0.7} style={{paddingLeft:20, paddingVertical:8, paddingRight: Platform.OS === "ios" ? 0 : 10}}>
+         
+                    <MaterialCommunityIcons name={owned ? 'checkbox-marked-circle' : 'folder-multiple-plus-outline'} color={theme.colors[globalColorScheme].tabBarIcon} size={25} />
+            </TouchableOpacity>
+
+
               <TouchableOpacity onPress={() => {navigation.navigate("GameInfo", {id:game.id} as never) }} activeOpacity={0.7} style={{paddingLeft:20, paddingVertical:8, paddingRight: Platform.OS === "ios" ? 0 : 10}}>
                   <Ionicons name={'information-circle-outline'} color={theme.colors[globalColorScheme].tabBarIcon} size={26}></Ionicons>
               </TouchableOpacity>
@@ -75,7 +108,7 @@ const GameRules = ({ id }: {id: number}) => {
           
         )      
         });
-      }, [navigation, colorScheme, showFirstColumn]);
+      }, [navigation, colorScheme, showFirstColumn, owned]);
 
 
     const [loading, setLoading] = useState(true);
@@ -269,6 +302,10 @@ const GameRules = ({ id }: {id: number}) => {
         try {
           const fetchedGame:GameProps = await gameService.getGame(id);
           setGame(fetchedGame);
+          if (fetchedGame.owned){
+            setOwned(fetchedGame.owned);
+          }
+          
        
           let game = fetchedGame;
           if (game.game_rules){
@@ -280,6 +317,7 @@ const GameRules = ({ id }: {id: number}) => {
           setLoading(false);
         } catch (error) {
           console.error('Error fetching posts:', error);
+          console.log(error);
           setLoading(false);
         }
       };
@@ -409,7 +447,6 @@ const GameRules = ({ id }: {id: number}) => {
         <View style={{flex:1, alignItems:"center", justifyContent: "center"}}><ActivityIndicator size="large" color={theme.colors[colorScheme].black} /></View> :
       
        <View style={{flex:1, flexDirection:"row"}}>
-
 
    
       <ScrollView style={{...styles.container, backgroundColor:(isTablet ? theme.colors[colorScheme].accordianHeaderBackground :  theme.colors[colorScheme].white), maxWidth: (isTablet ? ( showFirstColumn ? "33%" : "0%") : undefined)}} contentInsetAdjustmentBehavior="automatic">
@@ -613,7 +650,18 @@ const GameRules = ({ id }: {id: number}) => {
 
 
 
-
+<Toast config={{  
+    success: (props:any) => 
+    ( <BaseToast {...props} style={
+      { backgroundColor:theme.colors[colorScheme].lightgrey, borderLeftColor: theme.colors.secondary }} text1Style={{color:theme.colors[colorScheme].black}}
+    />  
+    ),
+    error: (props:any) => 
+    ( <BaseToast {...props} style={
+      { backgroundColor:theme.colors[colorScheme].lightgrey, borderLeftColor: theme.colors.accent  }} text1Style={{color:theme.colors[colorScheme].black}}
+    />  
+    )    
+    }} />
 
 
         </View>

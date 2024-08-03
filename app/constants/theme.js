@@ -5,8 +5,7 @@ const theme = {
             paddingLeft:10,
             paddingRight:10,
             paddingTop:15,
-            paddingBottom:15,
-            borderRadius:10
+            paddingBottom:15
         },
 
         buttonText: {
@@ -16,9 +15,8 @@ const theme = {
         input:{
             paddingLeft:13,
             paddingRight:13,
-            paddingTop:14,
-            paddingBottom:14,
-            borderRadius:10,
+            paddingTop:16,
+            paddingBottom:16,
             borderWidth:1
 
         }    

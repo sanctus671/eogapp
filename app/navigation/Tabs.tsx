@@ -37,7 +37,7 @@ const SearchWrapper = () => {
             name="Game"
             component={Game}
             />          
-            <SearchStack.Screen options={{title: "Game Rules", headerLargeTitle: true,headerTransparent: Platform.OS === "ios"}}
+            <SearchStack.Screen options={{title: "Game Rules", headerLargeTitle: true,headerTransparent: Platform.OS === "ios", animation: "slide_from_right"}}
             name="GameRulesInner"
             component={GameRulesInner}
             />       
@@ -64,11 +64,12 @@ const GamesWrapper = () => {
             name="Game"
             component={Game}
             />          
-            <GameStack.Screen options={{title: "Game Rules", headerLargeTitle: true,headerTransparent: Platform.OS === "ios"} }
+            <GameStack.Screen options={{title: "Game Rules", headerLargeTitle: true,headerTransparent: Platform.OS === "ios", animation: "slide_from_right"} }
             name="GameRulesInner"
             component={GameRulesInner}
             />      
-            <GameStack.Screen options={{title: "Game Info", presentation:"modal",headerLargeTitle:false, headerLargeStyle: {backgroundColor:theme.colors.darkgrey}, headerStyle: {backgroundColor:theme.colors.darkgrey},
+            <GameStack.Screen options={{title: "Game Info", presentation:"modal",
+            headerLargeTitle:false, headerLargeStyle: {backgroundColor:theme.colors.darkgrey}, headerStyle: {backgroundColor:theme.colors.darkgrey},
                 } }
                 name="GameInfo" 
             component={GameInfo}
