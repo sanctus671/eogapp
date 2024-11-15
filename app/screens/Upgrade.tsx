@@ -1,8 +1,9 @@
-import { Alert, Appearance, Linking, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, Appearance, Dimensions, Linking, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import theme from '../constants/theme';
 const colorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
 import * as userService from '../services/UserService';
+import * as purchaseService from '../services/PurchaseService';
 import { Ionicons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
  import {
@@ -22,14 +23,18 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
     Subscription,
     SubscriptionAndroid,
     SubscriptionIOS,
-    ProrationModesAndroid,
     setup,
     IapIosSk2,
     STOREKIT_OPTIONS,
-    clearTransactionIOS
+    clearTransactionIOS,
+    Product,
+    getProducts,
+    ProductIOS,
+    ProductAndroid,
+    requestPurchase
 } from 'react-native-iap';
 import LoadingModal from '../components/LoadingModal';
-import { useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import FocusAwareStatusBar from '../components/FocusAwareStatusBar';
 import Accordion from '../components/Accordian';
@@ -37,11 +42,29 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import moment from 'moment';
 
 
-const productIds = ['com.tabletopcodex.app.premiummonthly', 'com.tabletopcodex.app.premiumyearly'];
-const productIdsMap = {'monthly': 'com.tabletopcodex.app.premiummonthly', 'yearly' : 'com.tabletopcodex.app.premiumyearly'}
+const productIds:any = Platform.select({
+    ios: ['com.tabletopcodex.app.premiummonthly', 'com.tabletopcodex.app.premiumyearly'],
+    android: ['com.tabletopcodex.app.premiummonthly', 'com.tabletopcodex.app.premiumyearly'],
+});
+
+
+const tierProductIds:any = Platform.select({
+    ios: ['com.tabletopcodex.app.tierone', 'com.tabletopcodex.app.tiertwo', 'com.tabletopcodex.app.tierthree'],
+    android: ['com.tabletopcodex.app.tierone', 'com.tabletopcodex.app.tiertwo', 'com.tabletopcodex.app.tierthree'],
+});
+
+
+const productIdsMap = {
+    'monthly': 'com.tabletopcodex.app.premiummonthly', 
+    'yearly' : 'com.tabletopcodex.app.premiumyearly', 
+    'tier1' : 'com.tabletopcodex.app.tierone', 
+    'tier2' : 'com.tabletopcodex.app.tiertwo', 
+    'tier3' : 'com.tabletopcodex.app.tierthree'
+}
 
 type RouteParams = {
     setGameOwned:(owned:boolean) => void;
+    game?: any;
   };
 
 type NavProps = {
@@ -51,23 +74,47 @@ type NavProps = {
 const Upgrade = ({ navigation }: NavProps) => {
 
     const route = useRoute();
-    const { setGameOwned } = route.params as RouteParams;
+    const { setGameOwned, game } = route.params as RouteParams;
 
     const insets = useSafeAreaInsets();
+    const navigationStack = useNavigation<NativeStackNavigationProp<any>>();
 
      const [subscriptions, setSubscriptions] = useState<Array<Subscription | SubscriptionAndroid | SubscriptionIOS>>([]);
 
+     const [tierProducts, setTierProducts] = useState<Array<Product | ProductAndroid | ProductIOS>>([]);
+
     const [loadingModalVisible, setLoadingModalVisible] = useState(false);
 
+    const [hasPurchased, setHasPurchased] = useState(false);
+
+
+    useFocusEffect(
+        React.useCallback(() => {
+
+
+            if (hasPurchased){
+                navigationStack.goBack();
+            }
+
+          return () => {
+       
+          };
+        }, [])
+      );
+
     const purchaseProduct = async (productId: string) => {
+
 
 
         for (let subscription of subscriptions){
             if (subscription.productId && subscription.productId === productId){
 
+           
+
                 try {
 
                     if (Platform.OS === "ios"){
+              
                         await requestSubscription({ sku: productId }); 
 
                     }
@@ -85,13 +132,12 @@ const Upgrade = ({ navigation }: NavProps) => {
                         await requestSubscription({ sku: productId,
                             subscriptionOffers: [
                                 {sku: productId, offerToken: offerToken},
-                              ],               
-                            prorationModeAndroid: ProrationModesAndroid.IMMEDIATE_WITHOUT_PRORATION }); 
+                              ]}); 
 
                     }
 
                 } catch (error) {
-                    console.error('Purchase error:', error);
+                    //console.error('Purchase error:', error);
                     //Alert.alert("Purchase Product Error", JSON.stringify(error));
 
                     //Alert.alert("Error", "There was an error with your purchase request. Please contact support@tootloo.com for further help.");  
@@ -116,14 +162,95 @@ const Upgrade = ({ navigation }: NavProps) => {
             await userService.updateUser(updateUser);
         
             setLoadingModalVisible(false);
+            setHasPurchased(true);
+
+            Alert.alert("Thank you!", "Now that you've unlocked Tabletop Codex, be sure to set your name, email, and password on the My Account screen to personalize the app so you can access your games on other devices.", [
+                {
+                    text: 'Dismiss',
+                    onPress: () => { },
+                    style: 'cancel',
+                  },
+                  { text: 'Update Account', onPress: () => navigationStack.navigate("Account Modal") },
+                ]); 
     
-            setTimeout(() => {navigation.goBack()}, 500);
+            //setTimeout(() => {navigation.goBack()}, 500);
  
           }
           catch (error) {
             Alert.alert("Error", "There was an error upgrading your account. Please contact support.");        
           }
     }
+
+
+
+    const purchaseTierProduct = async (productId: string) => {
+
+
+
+        for (let product of tierProducts){
+            if (product.productId && product.productId === productId){           
+
+                try {
+
+                    if (Platform.OS === "ios"){
+
+                        await requestPurchase({sku: productId});
+
+                    }
+                    else if (Platform.OS === "android"){                        
+
+                        await requestPurchase({sku: productId});
+
+                    }
+
+                } catch (error) {
+                    //console.error('Purchase error:', error);
+                    //Alert.alert("Purchase Product Error", JSON.stringify(error));
+
+                    //Alert.alert("Error", "There was an error with your purchase request. Please contact support@tootloo.com for further help.");  
+                }     
+            
+            
+            }
+        }
+     
+        
+    }
+
+
+
+    const unlockGame = async (purchase: Purchase) => {
+        try {
+     
+            setLoadingModalVisible(true);            
+
+            setGameOwned(true);
+
+            if (game){
+                await purchaseService.createGamePurchase({game_id:game.id});
+            }
+        
+            setLoadingModalVisible(false);
+            setHasPurchased(true);
+
+            Alert.alert("Thank you!", "Now that you've unlocked " + (game ? game.name : "this game") + ", be sure to set your name, email, and password on the My Account screen to personalize the app so you can access your games on other devices.", [
+                {
+                    text: 'Dismiss',
+                    onPress: () => { },
+                    style: 'cancel',
+                  },
+                  { text: 'Update Account', onPress: () => navigationStack.navigate("Account Modal") },
+                ]);
+    
+            //setTimeout(() => {navigation.goBack()}, 500);
+ 
+          }
+          catch (error) {
+            Alert.alert("Error", "There was an error upgrading your account. Please contact support.");        
+          }
+    }
+
+
  
 
     const restorePurchases = async () => {
@@ -148,6 +275,19 @@ const Upgrade = ({ navigation }: NavProps) => {
                         return;
                     }
                 }
+                else if (purchase.productId && tierProductIds.includes(purchase.productId)){
+                    if (purchase.productId === productIdsMap["tier1"]){
+                        foundPurchase = true;
+                        await unlockGame(purchase);
+                        return;
+                    }
+                    else if (purchase.productId === productIdsMap["tier2"]){
+
+                    }
+                    else if (purchase.productId === productIdsMap["tier3"]){
+                        
+                    }
+                }
             });
 
             if (foundPurchase){
@@ -158,7 +298,7 @@ const Upgrade = ({ navigation }: NavProps) => {
 
           } catch (err) {
             //Alert.alert("Error", JSON.stringify(err)); 
-            console.warn('restorePurchases error', err);
+            //console.warn('restorePurchases error', err);
             Alert.alert("Error", "Could not fetch purchases."); 
           }
     }
@@ -178,11 +318,11 @@ const Upgrade = ({ navigation }: NavProps) => {
                         }
                         else{
                             if (subscription.productId === productIdsMap['monthly']){
-                                return "$8.99";
+                                return "$6.99";
 
                             }
                             else if (subscription.productId === productIdsMap['yearly']){
-                                return "$89.99";
+                                return "$69.99";
 
                             }
                             return "";
@@ -203,11 +343,11 @@ const Upgrade = ({ navigation }: NavProps) => {
                     }  
                     else {
                         if (subscription.productId === productIdsMap['monthly']){
-                            return "$8.99";
+                            return "$6.99";
 
                         }
                         else if (subscription.productId === productIdsMap['yearly']){
-                            return "$89.99";
+                            return "$69.99";
 
                         }
                         return "";
@@ -215,11 +355,11 @@ const Upgrade = ({ navigation }: NavProps) => {
                 }
                 catch (error){
                     if (subscription.productId === productIdsMap['monthly']){
-                        return "$8.99";
+                        return "$6.99";
 
                     }
                     else if (subscription.productId === productIdsMap['yearly']){
-                        return "$89.99";
+                        return "$69.99";
 
                     }
                     return "";
@@ -228,15 +368,123 @@ const Upgrade = ({ navigation }: NavProps) => {
         }
 
         if (productId === productIdsMap['monthly']){
-            return "$8.99";
+            return "$6.99";
 
         }
         else if (productId === productIdsMap['yearly']){
-            return "$89.99";
+            return "$69.99";
 
         }
         return "";
     }
+
+
+
+
+    const getTierProductPrice = (productId: string) => {
+
+
+        for (let product of tierProducts){
+            if (product.productId && product.productId === productId){
+                try {
+
+                    if (Platform.OS === "ios"){
+                        if (product.localizedPrice){
+                            return product.localizedPrice;
+                        }
+                        else{
+                            if (product.productId === productIdsMap['tier1']){
+                                return "$0.99";
+
+                            }
+                            else if (product.productId  === productIdsMap['tier2']){
+                                return "$1.99";
+
+                            }
+                            else if (product.productId  === productIdsMap['tier3']){
+                                return "$2.99";
+
+                            }
+                            return "";
+                        }
+                        
+        
+                    }
+                    else if (Platform.OS === "android"){
+
+                        if (product.localizedPrice){
+                            return product.localizedPrice;
+                        }
+                        else{
+                            if (product.productId === productIdsMap['tier1']){
+                                return "$0.99";
+
+                            }
+                            else if (product.productId  === productIdsMap['tier2']){
+                                return "$1.99";
+
+                            }
+                            else if (product.productId  === productIdsMap['tier3']){
+                                return "$2.99";
+
+                            }
+                            return "";
+                        }
+
+
+                    }  
+                    else {
+
+                        if (product.productId === productIdsMap['tier1']){
+                            return "$0.99";
+
+                        }
+                        else if (product.productId  === productIdsMap['tier2']){
+                            return "$1.99";
+
+                        }
+                        else if (product.productId  === productIdsMap['tier3']){
+                            return "$2.99";
+
+                        }
+                        return "";
+                    }
+                }
+                catch (error){
+
+                    if (product.productId === productIdsMap['tier1']){
+                        return "$0.99";
+
+                    }
+                    else if (product.productId  === productIdsMap['tier2']){
+                        return "$1.99";
+
+                    }
+                    else if (product.productId  === productIdsMap['tier3']){
+                        return "$2.99";
+
+                    }
+                    return "";
+                } 
+            }
+        }
+
+
+        if (productId === productIdsMap['tier1']){
+            return "$0.99";
+
+        }
+        else if (productId  === productIdsMap['tier2']){
+            return "$1.99";
+
+        }
+        else if (productId  === productIdsMap['tier3']){
+            return "$2.99";
+
+        }
+        return "";
+    }
+
 
 
     useEffect(() => {
@@ -254,15 +502,18 @@ const Upgrade = ({ navigation }: NavProps) => {
                     await clearTransactionIOS()
                 }
                 let products:Array<Subscription> = await getSubscriptions({ skus: productIds } );
-                
 
+                let tierProducts:Array<Product> = await getProducts({skus:tierProductIds})
+                
+                //Alert.alert("Getting products", JSON.stringify(productIds));
                 //Alert.alert("Products", JSON.stringify(products));
 
            
                 setSubscriptions(products);
+                setTierProducts(tierProducts);
             } catch (err) {
                 //Alert.alert("Error Init", err);
-                console.warn(err);
+                //console.warn(err);
             } 
         };
 
@@ -272,15 +523,17 @@ const Upgrade = ({ navigation }: NavProps) => {
             const receipt = purchase.transactionReceipt;
             if (receipt) {
                 try {
-                    setLoadingModalVisible(true);
+                    
+                    if (productIds.includes(purchase.productId)){
+                        await upgradeUser(purchase);
+                    }
+                    else if (tierProductIds.includes(purchase.productId)){
+                        await unlockGame(purchase);
+                    }
 
-                    await upgradeUser(purchase);
-
-                    setLoadingModalVisible(false);
 
 
-
-                    const ackResult = await finishTransaction({ purchase: purchase, isConsumable : false });
+                    const ackResult = await finishTransaction({ purchase: purchase, isConsumable : tierProductIds.includes(purchase.productId) });
                     //console.log('ackResult', ackResult);
 
                     
@@ -289,20 +542,20 @@ const Upgrade = ({ navigation }: NavProps) => {
 
 
                 } catch (ackErr) {
-                    console.warn('ackErr', ackErr);
+                    //console.warn('ackErr', ackErr);
 
                     setLoadingModalVisible(false);
                     //Alert.alert("Error", "Purchase Error: " + ackErr);   
                     //Alert.alert("Error", "There was an error completing your purchase. Please contact support@tootloo.com for further help.");   
 
 
-                    await finishTransaction({ purchase: purchase as Purchase, isConsumable : false });
+                    await finishTransaction({ purchase: purchase as Purchase, isConsumable : tierProductIds.includes(purchase.productId) });
                 }
             }
         });
 
         const purchaseErrorSubscription = purchaseErrorListener(async (error: PurchaseError) => {
-            console.warn('purchaseErrorListener', error);
+            //console.warn('purchaseErrorListener', error);
             
         }); 
 
@@ -327,23 +580,24 @@ const Upgrade = ({ navigation }: NavProps) => {
         if (!isIos) {
 
             return (
-            <View style={styles.subDetailsContainer}>
+            <>
             <Text style={styles.paragraph}>
-            Tabletop Codex is free to use. Should you choose to upgrade to Premium, you can purchase this as a monthly or yearly cost. By purchasing Premium you will be charged to renew the subscription every month or every year for the plan price.
+              Tabletop Codex is free to use. You have multiple options to unlock more content. You can choose to upgrade to Premium, which is available as a monthly or yearly subscription, or you can unlock a single game with a one-time purchase. By purchasing Premium, you will be charged to renew the subscription every month or every year for the plan price.
             </Text>
+            <Text>{"\n"}</Text>
             <Text style={styles.paragraph}>
-              Payment will be charged to your credit card through your Google Play account at confirmation of purchase. Subscription renews automatically unless cancelled at least 24 hours prior to the end of the subscription period. There is no increase in price when renewing. Subscriptions can be cancelled via Google Play after purchase. Once purchased, refunds will not be provided for any unused portion of the term. Read our full <Text style={styles.link} onPress={() => openLink('https://www.orderofgamers.com/terms-and-conditions/')}>Terms of Service</Text> and our <Text style={styles.link} onPress={() => openLink('https://www.orderofgamers.com/privacy-policy/')}>Privacy Policy</Text>.
+              Payment will be charged to your credit card through your Google Play account at confirmation of purchase. Subscription renews automatically unless cancelled at least 24 hours prior to the end of the subscription period. There is no increase in price when renewing. Subscriptions can be cancelled via Google Play after purchase. Once purchased, refunds will not be provided for any unused portion of the term. For one-time purchases, access to the selected game will remain available indefinitely. Read our full <Text style={styles.link} onPress={() => openLink('https://www.tabletopcodex.com/terms')}>Terms of Service</Text> and our <Text style={styles.link} onPress={() => openLink('https://www.tabletopcodex.com/privacy')}>Privacy Policy</Text>.
             </Text>
-          </View>)
+            </>)
         }
-      
+        
         return (
           <View style={styles.subDetailsContainer}>
-            <Text style={styles.paragraph}>
-              You can purchase Premium as a monthly or yearly cost. By purchasing Tabletop Codex as a monthly or yearly subscription you will be charged to renew the subscription every month or every year for the plan price.
+            <Text style={{...styles.paragraph, marginBottom:8}}>
+              You have multiple options to unlock more content in Tabletop Codex. You can choose Premium as a monthly or yearly subscription, or unlock a single game with a one-time purchase. By purchasing a subscription, you will be charged to renew it every month or every year for the plan price.
             </Text>
             <Text style={styles.paragraph}>
-              Payment will be charged to your credit card through your iTunes account at confirmation of purchase. Subscription renews automatically unless cancelled at least 24 hours prior to the end of the subscription period. There is no increase in price when renewing. Subscriptions can be managed and auto-renewal turned off in Account Settings in iTunes after purchase. Once purchased, refunds will not be provided for any unused portion of the term. Read our full <Text style={styles.link} onPress={() => openLink('https://www.orderofgamers.com/terms-and-conditions/')}>Terms of Service</Text> and our <Text style={styles.link} onPress={() => openLink('https://www.orderofgamers.com/privacy-policy/')}>Privacy Policy</Text>.
+              Payment will be charged to your credit card through your iTunes account at confirmation of purchase. Subscription renews automatically unless cancelled at least 24 hours prior to the end of the subscription period. There is no increase in price when renewing. Subscriptions can be managed and auto-renewal turned off in Account Settings in iTunes after purchase. Once purchased, refunds will not be provided for any unused portion of the term. For one-time purchases, access to the selected game will remain available indefinitely. Read our full <Text style={styles.link} onPress={() => openLink('https://www.tabletopcodex.com/terms')}>Terms of Service</Text> and our <Text style={styles.link} onPress={() => openLink('https://www.tabletopcodex.com/privacy')}>Privacy Policy</Text>.
             </Text>
           </View>
         );
@@ -354,40 +608,80 @@ const Upgrade = ({ navigation }: NavProps) => {
   return (
     <View style={styles.container}>
       <FocusAwareStatusBar style={"light"} />
-    <ScrollView contentContainerStyle={styles.containerInner}>
+        <ScrollView contentContainerStyle={styles.containerInner}>
 
-  
+        <View style={[styles.upgradeContainer, {minHeight: Dimensions.get("screen").height - insets.top - insets.bottom - 104}]}>
+            <View>
+                {game && game.price_tier ? (
+                <View style={{alignItems:"center"}}>
 
-        <View style={[styles.featuresContainer, { backgroundColor: theme.colors.accent }]}>
-            <Text style={[styles.featuresHeaderText, { color: theme.colors.white }]}>
-                Unlock a growing library of hundreds of rules summaries with one easy subscription 
-            </Text>
+                    <Text style={[styles.featuresHeaderText, { color: theme.colors.white, marginBottom:15 }]}>
+                        Buy this game rulebook now!
+                    </Text>
 
-            <View style={styles.featuresIconRow}>
-                <Ionicons name="library-outline" size={34} color={theme.colors.white} />
-                <Text style={[styles.featuresIconText, { color: theme.colors.white }]}>
-                    Create your own library of game summaries you can easily access
-                </Text>
+                    <TouchableOpacity activeOpacity={.8} onPress={() => { purchaseTierProduct(productIdsMap[game.price_tier as 'tier1' | 'tier2' | 'tier3']) }} style={{ backgroundColor: theme.colors.white, paddingHorizontal: 30, paddingVertical: 12, width: 220, marginTop: 5 }} >
+                    <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: 700, textAlign: 'center' }}>{getTierProductPrice(productIdsMap[game.price_tier as 'tier1' | 'tier2' | 'tier3'])}</Text>
+                    </TouchableOpacity>
+
+
+                    <Text style={[styles.featuresHeaderText, { color: theme.colors.white, marginTop:40, marginBottom:30 }]}>
+                        OR
+                    </Text>
+
+
+                </View>
+                ) : null}
+                
+                <View style={{alignItems:"center"}}>
+                    <Text style={[styles.featuresHeaderText, { color: theme.colors.white, marginBottom:15 }]}>
+                        Unlock the entire library!
+                    </Text>
+
+                    <TouchableOpacity activeOpacity={.8} onPress={() => { purchaseProduct(productIdsMap['monthly']) }} style={{ backgroundColor: theme.colors.white, paddingHorizontal: 30, paddingVertical: 12, width: 220, marginTop: 5 }} >
+                    <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: 700, textAlign: 'center' }}>{getProductPrice(productIdsMap['monthly'])} per month</Text>
+                    </TouchableOpacity>
+
+
+                    <View style={{marginTop:20,marginBottom:10}}>
+                        <Text style={styles.annualText}>2 months free with{"\n"}an annual subscription</Text>
+                    </View>
+
+
+                    <TouchableOpacity activeOpacity={.8} onPress={() => { purchaseProduct(productIdsMap['yearly']) }} style={{ backgroundColor: theme.colors.white, paddingHorizontal: 30, paddingVertical: 12, width: 220 }} >
+                    <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: 700, textAlign: 'center' }}>{getProductPrice(productIdsMap['yearly'])} per year</Text>
+                    </TouchableOpacity>
+
+                </View>
+
+
+                <View style={[styles.featuresContainer]}>
+
+                    <View style={styles.featuresIconRow}>
+                        <Ionicons name="person-circle-outline" size={34} color={theme.colors.white} />
+                        <Text style={[styles.featuresIconText, { color: theme.colors.white, fontWeight:'bold' }]}>
+                        Get hundreds of game rules with one easy subscription
+                        </Text>
+                    </View>
+
+                    <View style={styles.featuresIconRow}>
+                        <Ionicons name="library-outline" size={34} color={theme.colors.white} />
+                        <Text style={[styles.featuresIconText, { color: theme.colors.white }]}>
+                        Create your own library of game summaries you can easily access
+                        </Text>
+                    </View>
+
+                    <View style={styles.featuresIconRow}>
+                        <MaterialCommunityIcons name="folder-multiple-plus-outline" size={34} color={theme.colors.white} />
+                        <Text style={[styles.featuresIconText, { color: theme.colors.white }]}>
+                        New summaries constantly added - so the value keeps increasing!
+                        </Text>
+                    </View>
+                </View>
             </View>
 
-            <View style={styles.featuresIconRow}>
-                <Ionicons name="build-outline" size={34} color={theme.colors.white} />
-                <Text style={[styles.featuresIconText, { color: theme.colors.white }]}>
-                    Always be up to date with fixes, updates and new functionality
-                </Text>
-            </View>
-
-            <View style={styles.featuresIconRow}>
-            <MaterialCommunityIcons name="folder-multiple-plus-outline" size={34} color={theme.colors.white}/>
-                <Text style={[styles.featuresIconText, { color: theme.colors.white }]}>
-                    New summaries added each week - so the value keeps increasing!
-                </Text>
-            </View>
         </View>
 
-
-
-        <View style={{marginTop:20}}>
+        <View style={{  }}>
          
             <Accordion headerText={"Subscription & Payment Details"} outsideColorScheme={colorScheme} key={1} search={""}>
                     {SubscriptionDetails()}
@@ -398,15 +692,30 @@ const Upgrade = ({ navigation }: NavProps) => {
         <View style={{marginBottom:100}}>
             <Accordion headerText={"Restore Purchases"} outsideColorScheme={colorScheme} key={2} search={""}>
 
-                <View>
-             <Text style={styles.paragraph}>Already purchased a premium? You can restore your purchase using the button below.</Text>
+            { Platform.OS === "android" ? 
+                <>
+             <Text style={styles.paragraph}>Already purchased this game or upgraded to premium? You can restore your purchase using the button below.</Text>
 
+            { Platform.OS === "android" ? <Text>{"\n"}{"\n"}{"\n"}</Text> : ""}
 
              <TouchableOpacity style={styles.restoreButton} activeOpacity={.8} onPress={() => {restorePurchases()}} >
                         <Text style={styles.restoreButtonName}>Restore Purchases</Text>
                         
                 </TouchableOpacity>  
+                </>
+
+                : 
+
+                <View>
+             <Text style={{...styles.paragraph, marginBottom:8}}>Already purchased this game or upgraded to premium? You can restore your purchase using the button below.</Text>
+
+
+                <TouchableOpacity style={styles.restoreButton} activeOpacity={.8} onPress={() => {restorePurchases()}} >
+                            <Text style={styles.restoreButtonName}>Restore Purchases</Text>
+                            
+                    </TouchableOpacity>                     
                 </View>
+            }
      
             </Accordion>
         </View>
@@ -419,21 +728,11 @@ const Upgrade = ({ navigation }: NavProps) => {
 
 
 
-    <View style={{alignItems:"center", justifyContent:"center", marginBottom:20 + insets.bottom, paddingTop:20}}>
-
-<TouchableOpacity activeOpacity={.8} onPress={() => {purchaseProduct(productIdsMap['yearly'])}} style={{backgroundColor:theme.colors.accent, paddingHorizontal:30,paddingVertical:12, width:220}} >
-        <Text style={{color:theme.colors.white, fontSize:18,fontWeight:700, textAlign:'center'}}>{getProductPrice(productIdsMap['yearly'])} per year</Text>                        
-</TouchableOpacity>   
-
-<TouchableOpacity activeOpacity={.8} onPress={() => {purchaseProduct(productIdsMap['monthly'])}} style={{backgroundColor:'#703a2c', paddingHorizontal:30,paddingVertical:12, width:220, marginTop:5}} >
-        <Text style={{color:theme.colors.white, fontSize:18,fontWeight:700, textAlign:'center'}}>{getProductPrice(productIdsMap['monthly'])} per month</Text>                        
-</TouchableOpacity>     
-
-<TouchableOpacity activeOpacity={.8} onPress={() => {navigation.goBack()}} style={{paddingTop:10}} >
-        <Text style={{color:theme.colors.accent, fontSize:14}}>Not now</Text>                        
-</TouchableOpacity>           
-
-</View>
+    <View style={{ alignItems: "center", justifyContent: "center", marginBottom: 10 + insets.bottom, paddingTop: 10 }}>
+        <TouchableOpacity activeOpacity={.8} onPress={() => { navigation.goBack() }}  >
+          <Text style={{ color: theme.colors.accent, fontSize: 14 }}>Not now</Text>
+        </TouchableOpacity>
+      </View>
 
 
 
@@ -447,72 +746,88 @@ const Upgrade = ({ navigation }: NavProps) => {
 
 export default Upgrade
 
+
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        backgroundColor: theme.colors[colorScheme].white,
+      flex: 1,
+      backgroundColor: theme.colors[colorScheme].white,
     },
     containerInner: {
-        marginTop:Platform.OS === "ios" ? 70 : 20,
-        marginBottom: 40
+      marginBottom: 40
     },
     subDetailsContainer: {
-      },
-      title: {
-        fontSize: 18,
-        color:theme.colors[colorScheme].black,
-        textAlign:'center',
-        marginBottom:8
-      },
-      paragraph: {
-        fontSize: 14,
-        color:theme.colors[colorScheme].black,
-        marginBottom: 8
-      },
-      link: {
-        color: theme.colors.primary,
-
-        textDecorationLine: 'underline',
-      },
-      restoreButton: {
-          backgroundColor: theme.colors.accent,
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems:"center",
-          flex:1,
-          paddingLeft:15,
-          paddingRight:15,
-          paddingTop:16,
-          paddingBottom:16,
-          marginTop:10
-      },
-     restoreButtonName: {
-          color:theme.colors.white,
-          fontSize:14,
-          fontWeight:"700"
-          },
-        
-          featuresContainer: {
-            marginHorizontal: 20,
-            paddingHorizontal: 30,
-            paddingTop: 20,
-            paddingBottom:40
-        },
-        featuresHeaderText: {
-            fontSize: 20,
-            fontWeight: '700',
-            textAlign: 'center',
-        },
-        featuresIconRow: {
-            flexDirection: "row",
-            alignItems: 'center',
-            flex: 1,
-            marginTop: 25,
-        },
-        featuresIconText: {
-            marginLeft: 10,
-            fontSize: 16,
-            lineHeight: 18,
-        }
-        
-        })
+      flex: 1,
+      width: "100%"
+    },
+    upgradeContainer: {
+      backgroundColor: theme.colors.accent,
+      paddingHorizontal: 30,
+      paddingTop: 20,
+      paddingBottom: 40,
+      justifyContent:'center'
+    },
+    annualText: {
+      fontSize: 14,
+      lineHeight: 16,
+      color:theme.colors.white,
+      textAlign:"center"
+    },
+  
+    title: {
+      fontSize: 18,
+      color: theme.colors[colorScheme].black,
+      textAlign: 'center',
+      marginBottom: 8
+    },
+    paragraph: {
+      fontSize: 14,
+      lineHeight: 20,
+      color: theme.colors[colorScheme].black,
+    },
+    link: {
+      color: theme.colors.primary,
+      textDecorationLine: 'underline',
+    },
+    restoreButton: {
+      backgroundColor: theme.colors.accent,
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      flex: 1,
+      paddingLeft: 15,
+      paddingRight: 15,
+      paddingTop: 16,
+      paddingBottom: 16,
+      marginTop: 10
+    },
+    restoreButtonName: {
+      color: theme.colors.white,
+      fontSize: 14,
+      fontWeight: "700"
+    },
+    featuresContainer: {
+      marginTop:5,
+      alignItems:'center'
+    },
+    featuresHeaderText: {
+      fontSize: 22,
+      fontWeight: '700',
+      textAlign: 'center',
+    },
+    featuresIconRow: {
+      flexDirection: "row",
+      alignItems: 'center',
+      flex: 1,
+      marginTop: 25,
+      maxWidth:290,
+      paddingHorizontal:10
+    },
+    featuresIconText: {
+      marginLeft: 10,
+      fontSize: 16,
+      lineHeight: 18,
+      flex: 1,
+      flexWrap: 'wrap'
+    }
+  });
+  

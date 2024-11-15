@@ -8,7 +8,7 @@ const API_URL = environment.API_URL;
 
 
 const handleApiError = (error:any) => {
-  console.error('API Error:', error);
+  //console.error('API Error:', error);
   throw error;
 };
 
@@ -33,3 +33,13 @@ export const createPurchase = async (purchase:any) => {
         handleApiError(error);
       }
     };
+
+
+    export const createGamePurchase = async (purchase:any) => {
+        try {
+          const response = await axios.post(API_URL + '/gamepurchases', purchase);
+          return response;
+        } catch (error) {
+          handleApiError(error);
+        }
+      };

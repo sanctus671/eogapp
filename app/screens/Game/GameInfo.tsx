@@ -68,7 +68,7 @@ const GameInfo = ({ navigation }: NavProps) => {
             setGame(fetchedGame);
             setLoading(false);
           } catch (error) {
-            console.error('Error fetching posts:', error);
+            //console.error('Error fetching posts:', error);
             setLoading(false);
           }
         };
@@ -179,7 +179,7 @@ const GameInfo = ({ navigation }: NavProps) => {
 
 {(game.version ?            
             <View style={{...styles.gameNotes, marginTop: 15, marginBottom: (game.notes ? 15 : 0),  borderBottomWidth: game.notes ? 1 : 0}}>
-                <Text style={{...styles.gameNotesNote, fontWeight:"bold"}}>Version {game.version}</Text>
+                <Text style={{...styles.gameNotesNote, fontWeight:"bold"}}>Tabletop Codex Version {game.version}</Text>
             </View>
              : <></>)}
 

@@ -10,7 +10,7 @@ const API_URL = environment.API_URL;
 
 
 const handleApiError = (error:any) => {
-  console.error('API Error:', error);
+  //console.error('API Error:', error);
   throw error;
 };
 
@@ -324,7 +324,20 @@ export const formatGameRules = (gameRules:string) => {
 
 
                 currentSection.contentItems.push(<Text style={{...extraStyles}}>{preContentText}</Text>);
-                currentSection.contentItems.push(<ImageViewer imageUrl={ruleItemSectionChild.src} width={width} height={height} />);
+                //currentSection.contentItems.push(<><Text>{"\n\n"}</Text><ImageViewer imageUrl={ruleItemSectionChild.src} width={width} height={height} /></>);
+
+                if (Platform.OS === 'android' && !preContentText) {
+                    currentSection.contentItems.push(
+                        <>
+                            <Text>{"\n\n\n"}</Text>
+                            <ImageViewer imageUrl={ruleItemSectionChild.src} width={width} height={height} />
+                        </>
+                    );
+                }
+                else{
+                    currentSection.contentItems.push(<ImageViewer imageUrl={ruleItemSectionChild.src} width={width} height={height} />);
+                }
+
 
                 if (currentSection.fullPage){currentSubSection.contentItems.push(<Text style={{...extraStyles}}>{preContentText}</Text>);} 
                 if (currentSection.fullPage){currentSubSection.contentItems.push(<ImageViewer imageUrl={ruleItemSectionChild.src}  width={width} height={height}  />);}

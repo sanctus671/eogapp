@@ -26,28 +26,25 @@ const Search = () => {
   const [filteredGames, setFilteredGames] = useState<Array<any>>([]);
   const [loading, setLoading] = useState(true);
 
-  
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const fetchedGames = await gameService.getGames();
-        setGames(fetchedGames.data);
-        setLoading(false);
+  const fetchPosts = async () => {
+    try {
+      const fetchedGames = await gameService.getGames();
+      setGames(fetchedGames.data);
+      setLoading(false);
 
 
-        setFreeGames(fetchedGames.free);
+      setFreeGames(fetchedGames.free);
 
 
 
 
-      } catch (error) {
-        console.error('Error fetching posts:', error);
-        setLoading(false);
-      }
-    };
-  
-    fetchPosts();
-  }, []);
+    } catch (error) {
+      //console.error('Error fetching posts:', error);
+      setLoading(false);
+    }
+  };
+
+
 
   const fetchUser = async () => {
     const fetchedUser:any = await userService.getUserData();
@@ -56,7 +53,7 @@ const Search = () => {
 
   useFocusEffect(
     React.useCallback(() => {
-
+        fetchPosts();
       fetchUser();
       return () => {
    
@@ -113,7 +110,7 @@ const Search = () => {
         renderItem={({item}) => {
           return (
             <TouchableOpacity style={{...styles.item, height: (segmentIndex === 0 ? getItemHeight() : "auto")}} activeOpacity={.8} 
-            onPress={() => navigation.navigate("Game", {id:item.id, name: item.name, owned:freeGames.includes(item.id) || user.premium})}>
+            onPress={() => navigation.navigate("Game", {id:item.id, name: item.name, owned:freeGames.includes(item.id) || user.premium || item.purchased})}>
               <View style={{...styles.itemImage, display:(segmentIndex === 0 ? "flex" : "none")}} >
                 <ImageBackground source={{ uri: item.banner_image}} resizeMode="cover" style={{...styles.itemImage }}></ImageBackground>
                 <View style={{...styles.itemListOwned, right:15, bottom:15, display: (item.owned ? "flex" : "none")}}>

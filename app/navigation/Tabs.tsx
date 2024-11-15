@@ -110,9 +110,20 @@ const AccountWrapper = () => {
 }
 
 
+  
+
+
+
+
+
 const Tabs = () => {
+	
 
     const insets = useSafeAreaInsets();
+	
+
+	
+	
   return (
     <Tab.Navigator screenOptions={{headerShown:false, tabBarShowLabel:false, tabBarActiveTintColor: theme.colors.accent, tabBarInactiveTintColor: theme.colors[colorScheme].tabBarIcon, 
     tabBarStyle:{backgroundColor: theme.colors[colorScheme].tabBarBackground, height: 60 + insets.bottom, borderTopWidth:0}}} sceneContainerStyle={{backgroundColor:theme.colors[colorScheme].white}} >

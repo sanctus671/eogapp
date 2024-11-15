@@ -14,6 +14,7 @@ interface AuthProps {
 
 
 const TOKEN_KEY = 'eog_token';
+const HAS_REGISTERED_KEY = 'eog_registered';
 const API_URL = environment.API_URL;
 const AuthContext = createContext<AuthProps>({});
 
@@ -56,14 +57,25 @@ export const AuthProvider = ({children}:any) => {
 				
 				}
 				else{
+                    //check if first load ie hasnt logged in before
+                    //if it is, then register an anonymous user and return the token and authenticated
 
-					setAuthState(
-						{
-							token: null,
-							authenticated: null,
-							ready:true
-						}
-					)					
+					
+                    const hasRegistered = await SecureStore.getItemAsync(HAS_REGISTERED_KEY);
+
+                    if (!hasRegistered){
+                        await registerAnonymous();
+                    }
+                    else{
+                        setAuthState(
+                            {
+                                token: null,
+                                authenticated: null,
+                                ready:true
+                            }
+                        )
+                    }
+					
 					}
 
 			}
@@ -95,7 +107,8 @@ export const AuthProvider = ({children}:any) => {
 		axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 		
 		
-		await SecureStore.setItemAsync(TOKEN_KEY, token);		
+		await SecureStore.setItemAsync(TOKEN_KEY, token);	
+        await SecureStore.setItemAsync(HAS_REGISTERED_KEY, "1");	
 	}
 
 
@@ -113,7 +126,7 @@ export const AuthProvider = ({children}:any) => {
 			
 			
 		} catch(e) {
-			console.log(e);
+			
 			return {error: true, msg: (e as any).message };
 		}
 		
@@ -180,10 +193,10 @@ export const AuthProvider = ({children}:any) => {
 			  authenticated: false,
 			  ready: true
 			});
-		
+	
 			await SecureStore.deleteItemAsync(TOKEN_KEY);
 		  } catch (error) {
-			console.error('Error during logout:', error);
+			//console.error('Error during logout:', error);
 		  }
 		
 

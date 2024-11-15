@@ -2,7 +2,7 @@
   "expo": {
     "name": "Tabletop Codex",
     "slug": "eogapp",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -26,16 +26,18 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#52595d"
       },
+      
       "bundleIdentifier": "com.tabletopcodex.app",
-      "package": "com.tabletopcodex.app"
+      "package": "com.tabletopcodex.app",
+      "versionCode": 3 
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-font",
-      "expo-secure-store",
-      "react-native-iap"
+      "react-native-iap",
+      "expo-secure-store"
     ],
     "extra": {
       "eas": {

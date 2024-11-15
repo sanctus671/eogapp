@@ -34,7 +34,11 @@ const Game = ({ navigation }: NavProps) => {
     useEffect(() => {
         // Update the stack header options when the component mounts
         navigation.setOptions({
-          headerTitle: Platform.OS === "ios" ? name : () => <View style={{width:windowWidth - 270}}><Text numberOfLines={1} style={{fontSize:20, fontWeight:500}}>{name}</Text></View>,
+          headerTitle: Platform.OS === "ios" ? name : () => <View style={{width:gameOwned ? windowWidth - 270 : windowWidth - 100}}>
+            <Text numberOfLines={1} 
+          style={{fontSize:20, fontWeight:500, color: gameOwned ? theme.colors[colorScheme].black : theme.colors.white}}>{name}
+          </Text>
+          </View>,
           
           headerLargeStyle: {
             

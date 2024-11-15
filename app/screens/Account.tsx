@@ -1,6 +1,6 @@
 import { Alert, Appearance, Platform, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useCallback, useEffect, useState } from 'react'
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
@@ -15,10 +15,11 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 const colorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
 
 type IconName = keyof typeof Ionicons['glyphMap'];
+type IconName2 = keyof typeof MaterialIcons['glyphMap'];
 
 interface SectionData {
     title: string;
-    data: { title: string; icon: IconName; onPress: () => void }[];
+    data: { title: string; icon: any; onPress: () => void }[];
 }
 
 
@@ -35,6 +36,7 @@ const Account = () => {
     const [name, setName] = useState('');
     const [changeLogoutVisible, setChangeLogoutVisible] = useState(false);
     const [user, setUser] = useState<any>({});
+    const [deleteAccountVisible, setDeleteAccountVisible] = useState(false);
 
     useFocusEffect(
         useCallback(() => {
@@ -45,7 +47,7 @@ const Account = () => {
               setName(fetchedUser.name);
               setUser(fetchedUser);
             } catch (error) {
-              console.error('Error fetching posts:', error);
+              //console.error('Error fetching posts:', error);
             }
           };
       
@@ -180,21 +182,52 @@ const Account = () => {
   
       openLink(storeUrl);
     }
+
+
+
+    const deleteAccount = async () => {
+        setDeleteAccountVisible(false);
+    
+        try {
+          await userService.deleteUser();
+        }
+        catch (error) {
+          Toast.show({
+            type: 'error',
+            text1: 'There was an error deleting your account.',
+            position:"bottom",
+            onPress: () => {Toast.hide();}
+          });          
+        }
+    
+    
+        Toast.show({
+          type: 'success',
+          text1: 'Account deleted',
+          position:"bottom",
+          onPress: () => {Toast.hide()}
+        });
+        
+        setTimeout(() => {logout();}, 1000);
+      
+    }
+
   
   
     const DATA: SectionData[] = [
       {
         title: 'Support',
         data: [
-          { title: 'Rate The App', icon: 'heart', onPress: () => {writeReview()} },
-          { title: 'Subscribe', icon: 'logo-youtube', onPress: () => {openLink("https://www.youtube.com/user/EsotericOrderGamers")} },
-          { title: 'Contact Us', icon: 'mail', onPress: () => {openLink("mailto:head@orderofgamers.com")} },
+          { title: 'Please rate us 5 stars', icon: 'heart', onPress: () => {openLink("https://www.tabletopcodex.com/rate")} },
+          { title: 'Website', icon: 'globe', onPress: () => {openLink("https://www.tabletopcodex.com/")} },
+          { title: 'YouTube Channel', icon: 'logo-youtube', onPress: () => {openLink("https://www.youtube.com/user/EsotericOrderGamers")} },
+          { title: 'Contact Us', icon: 'mail', onPress: () => {openLink("mailto:head@tabletopcodex.com")} },
         ],
       },
       {
         title: 'Account',
         data: [
-          { title: 'Upgrade', icon: 'arrow-up-circle', onPress: () => {
+          { title: 'Unlock', icon: 'lock-open', onPress: () => {
             if (user.premium){
                 Alert.alert("Premium Owned", "You have already purchased premium.")
             }
@@ -206,7 +239,16 @@ const Account = () => {
           { title: 'Change Name', icon: 'person', onPress: () => {setChangeNameVisible(true)} }, 
           { title: 'Change Email', icon: 'mail', onPress: () => {setChangeEmailVisible(true)} }, 
           { title: 'Change Password', icon: 'key', onPress: () => {setChangePasswordVisible(true)} },
+          { title: 'Delete Account', icon: 'trash', onPress: () => {setDeleteAccountVisible(true)}},
           { title: 'Logout', icon: 'lock-closed', onPress: () => { Platform.OS === "web" ? logout() : setChangeLogoutVisible(true)} },
+        ],
+      },
+      {
+        title: 'Terms & Conditions',
+        data: [
+            { title: 'Terms of Service', icon: 'pencil', onPress: () => {openLink("https://www.tabletopcodex.com/terms")} }, 
+          { title: 'Privacy Policy', icon: 'hand-left', onPress: () => {openLink("https://www.tabletopcodex.com/privacy")} }, 
+          { title: 'Copyright Note', icon: 'copyright', onPress: () => {openLink("https://www.tabletopcodex.com/copyright")} },
         ],
       }
   
@@ -222,13 +264,22 @@ const Account = () => {
             sections={DATA}
             keyExtractor={(item, index) => item.title + index}
             renderItem={({ item }) => (
+                <>
+                {item.title === "Unlock" &&  user.premium ? 
+                <></> :
                 <TouchableOpacity style={styles.item} onPress={item.onPress} activeOpacity={.7}>
+                    {item.icon === "copyright" ? 
+                    <MaterialIcons name={item.icon} size={20} color={theme.colors[colorScheme].black} style={styles.icon} />
+                    :
                     <Ionicons name={item.icon} size={20} color={theme.colors[colorScheme].black} style={styles.icon} />
-                    <Text style={styles.title}>{item.title === "Upgrade" && user.premium ? "Premium Purchased" : item.title}</Text>
+                    }
+                    <Text style={styles.title}>{item.title === "Unlock" && user.premium ? "Unlock Purchased" : item.title}</Text>
                     <View style={styles.chevronContainer}>
                         <Ionicons name="chevron-forward" size={24} color={theme.colors[colorScheme].grey} />
                     </View>
                 </TouchableOpacity>
+                }
+                </>
             )}
             renderSectionHeader={({ section: { title } }) => (
                 <View style={styles.sectionHeader}>
@@ -242,6 +293,17 @@ const Account = () => {
 
         {(Platform.OS === "ios" || Platform.OS === "android") ? 
           <>
+
+            <Dialog.Container visible={deleteAccountVisible} onBackdropPress={() => {setDeleteAccountVisible(false)}} onRequestClose={() => {setDeleteAccountVisible(false)}}>
+                <Dialog.Title>Confirm</Dialog.Title>
+                <Dialog.Description>
+                    You are about to delete your account and all data associated with your account. Do you want to continue?
+                </Dialog.Description>
+                <Dialog.Button color={theme.colors.accent} label="Cancel" onPress={() => {setDeleteAccountVisible(false)}} />
+                <Dialog.Button color={theme.colors.accent} label="Delete Account" bold={true} onPress={() => {deleteAccount()}} />
+            </Dialog.Container> 
+
+
               <Dialog.Container visible={changePasswordVisible} onBackdropPress={() => {setChangePasswordVisible(false)}} onRequestClose={() => {setChangePasswordVisible(false)}}>
                   <Dialog.Title>Change Password</Dialog.Title>
                   <Dialog.Description>

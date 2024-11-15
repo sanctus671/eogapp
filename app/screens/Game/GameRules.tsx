@@ -316,8 +316,8 @@ const GameRules = ({ id }: {id: number}) => {
           }
           setLoading(false);
         } catch (error) {
-          console.error('Error fetching posts:', error);
-          console.log(error);
+          //console.error('Error fetching posts:', error);
+    
           setLoading(false);
         }
       };

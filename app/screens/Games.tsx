@@ -25,10 +25,6 @@ const Games = () => {
   const [filteredGames, setFilteredGames] = useState<Array<any>>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-  
-    
-  }, []);
 
   const fetchUser = async () => {
     const fetchedUser:any = await userService.getUserData();
@@ -49,7 +45,7 @@ const Games = () => {
 
 
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      //console.error('Error fetching posts:', error);
       setLoading(false);
     }
   };
@@ -107,6 +103,7 @@ const Games = () => {
   }
 
 
+
   return (
     (loading ? 
       <View style={{flex:1, alignItems:"center", justifyContent: "center", backgroundColor:theme.colors[colorScheme].white}}><FocusAwareStatusBar style={colorScheme} /><ActivityIndicator size="large" color={theme.colors[colorScheme].black} /></View> :
@@ -122,9 +119,8 @@ const Games = () => {
             <TouchableOpacity style={{...styles.item, height: (segmentIndex === 0 ? getItemHeight() : "auto")}} activeOpacity={.8}
             onPress={() => 
             {
-                console.log("here");
-                console.log(freeGames)
-                navigation.navigate("Game", {id:item.id, name: item.name, owned:freeGames.includes(item.id) || user.premium})
+  
+                navigation.navigate("Game", {id:item.id, name: item.name, owned:freeGames.includes(item.id) || user.premium || item.purchased})
             }
             
             }>

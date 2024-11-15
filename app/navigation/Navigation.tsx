@@ -1,5 +1,5 @@
 import { NavigationContainer, useNavigation } from "@react-navigation/native";
-import { View, Text, Button, TextInput, Platform, StyleSheet, TouchableOpacity } from 'react-native'
+import { View, Text, Button, TextInput, Platform, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import Tabs from "./Tabs";
@@ -9,6 +9,9 @@ import theme from "../constants/theme";
 import Register from "../screens/Register";
 import ForgotPassword from "../screens/ForgotPassword";
 import Upgrade from "../screens/Upgrade";
+import UpgradeTest from "../screens/UpgradeTest";
+import Account from "../screens/Account";
+import { ImageScreen } from "../screens/Image";
 
 
 const Stack = createNativeStackNavigator();
@@ -17,9 +20,15 @@ export const Navigation = () => {
   
     const { authState, onRegisterAnonymous } = useAuth();
 
+
+
     if (!authState?.ready){
-      return (<View><Text></Text></View>)
+      return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>)
     }
+
 
     const registerAnonymous = async () => {
       const result = await onRegisterAnonymous!();
@@ -38,16 +47,16 @@ export const Navigation = () => {
                             component={Upgrade} 
                             options={({ navigation }) => ({
 
-
+                                headerBackTitle: 'Back',
 
                                 animation: (Platform.OS === "android" ? "fade_from_bottom" : "default"),
-                                title:"Upgrade",
-                                presentation: "modal",
+                                title:"Unlock",
+                        /*         presentation: "modal", */
                                 headerLargeTitle: false,
                                 headerTransparent: false,
                                 headerLargeStyle: { backgroundColor: theme.colors.darkgrey },
                                 headerStyle: { backgroundColor: theme.colors.darkgrey },
-                                headerRight: () => (
+/*                                 headerRight: () => (
                                     Platform.OS === "ios" ? 
                                         <TouchableOpacity
                                             onPress={() => navigation.goBack()}
@@ -56,9 +65,67 @@ export const Navigation = () => {
                                             <Text style={{ color: theme.colors.accent, fontSize: 16 }}>Close</Text>
                                         </TouchableOpacity> 
                                         : <></>
-                                )
+                                ) */
                             })} 
                         />
+
+                    <Stack.Screen 
+                            name="Account Modal" 
+                            component={Account} 
+                            options={({ navigation }) => ({
+
+                                headerBackTitle: 'Back',
+
+                                animation: (Platform.OS === "android" ? "fade_from_bottom" : "default"),
+                                title:"My Account",
+                        /*         presentation: "modal", */
+                                headerLargeTitle: false,
+                                headerTransparent: false,
+                                headerLargeStyle: { backgroundColor: theme.colors.darkgrey },
+                                headerStyle: { backgroundColor: theme.colors.darkgrey },
+/*                                 headerRight: () => (
+                                    Platform.OS === "ios" ? 
+                                        <TouchableOpacity
+                                            onPress={() => navigation.goBack()}
+                                            style={{ paddingTop: 10, paddingBottom: 10, paddingLeft: 10, paddingRight: 0 }}
+                                        >
+                                            <Text style={{ color: theme.colors.accent, fontSize: 16 }}>Close</Text>
+                                        </TouchableOpacity> 
+                                        : <></>
+                                ) */
+                            })} 
+                        />
+
+                        <Stack.Screen 
+                                name="Image" 
+                                component={ImageScreen} 
+                                options={({ navigation }) => ({
+    
+                                    headerBackTitle: 'Back',
+    
+                                    animation: (Platform.OS === "android" ? "fade_from_bottom" : "default"),
+                                    title:"",
+                                    presentation: "modal",
+                                    headerLargeTitle: false,
+                                    headerTransparent: false,
+                                    headerLargeStyle: { backgroundColor: theme.colors.darkgrey },
+                                    headerStyle: { backgroundColor: theme.colors.darkgrey },
+                                 headerRight: () => (
+                                    Platform.OS === "ios" ? 
+                                        <TouchableOpacity
+                                            onPress={() => navigation.goBack()}
+                                            style={{ paddingTop: 10, paddingBottom: 10, paddingLeft: 10, paddingRight: 0 }}
+                                        >
+                                            <Text style={{ color: theme.colors.accent, fontSize: 16 }}>Close</Text>
+                                        </TouchableOpacity> 
+                                        : <></>
+                                ) 
+                                })} 
+                            />
+
+
+
+
             </> )
             :
             (
@@ -81,3 +148,14 @@ export const Navigation = () => {
         </Stack.Navigator>
     </NavigationContainer>);
   }
+
+
+  
+const styles = StyleSheet.create({    
+  
+    container: {
+      backgroundColor: "#52595D",
+      flex: 1, justifyContent: 'center',
+      alignItems:'center'
+    }
+  })

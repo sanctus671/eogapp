@@ -7,6 +7,7 @@ import * as purchaseService from '../../services/PurchaseService';
 import ImageViewer from '../../components/ImageViewer';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 
 
   type GameProps = {
@@ -39,7 +40,7 @@ const GamePurchase = ({ id, setGameOwned }: {id: number, setGameOwned: (owned:bo
             setGame(fetchedGame);
             setLoading(false);
           } catch (error) {
-            console.error('Error fetching posts:', error);
+            //console.error('Error fetching posts:', error);
             setLoading(false);
           }
         };
@@ -137,23 +138,27 @@ const GamePurchase = ({ id, setGameOwned }: {id: number, setGameOwned: (owned:bo
                         <Text style={{color:theme.colors.accent}} onPress={() => openWebsite(game.website)}>{(game.publisher ? game.publisher : "View website")}</Text>
                     </Text> : <></>)}     
 
-                    {(game.version ?
-                    <Text style={{...styles.gameDescriptionInfoItem}}>
-                        <Text style={styles.gameDescriptionInfoItemLabel}>Rules Version: </Text>
-                        {game.version}
-                    </Text> : <></>)}            
+                  
                 </View>
 
             </View>
 
 
             <View style={styles.gamePurchase}>
-                <Text style={styles.gamePurchaseTitle}>Upgrade to unlock the rules & reference</Text>
-                <TouchableOpacity style={styles.gamePurchaseButton} activeOpacity={.8} onPress={() => navigation.navigate("Upgrade", {setGameOwned:setGameOwned})} >
-                        <Text style={styles.gamePurchaseName}>Upgrade to unlock</Text>
+                <TouchableOpacity style={styles.gamePurchaseButton} activeOpacity={.8} onPress={() => navigation.navigate("Upgrade", {setGameOwned:setGameOwned, game: game})} >
+                <Ionicons name="lock-open-outline" size={18} color={theme.colors.white} />
+                        <Text style={styles.gamePurchaseName}>Unlock</Text>
                         
                 </TouchableOpacity>        
             </View>
+
+            {(game.version ?            
+            <View style={{...styles.gameNotes, marginTop: 15, marginBottom: (game.notes ? 15 : 0),  borderBottomWidth: game.notes ? 1 : 0}}>
+                <Text style={{...styles.gameNotesNote, fontWeight:"bold"}}>Tabletop Codex Version {game.version}</Text>
+            </View>
+             : <></>)}
+
+
 
             {(game.notes ?            
             <View style={styles.gameNotes}>
@@ -223,8 +228,7 @@ const styles = StyleSheet.create({
         borderBottomColor:theme.colors[colorScheme].darkgrey,
         marginLeft:15,
         marginRight:15,   
-        paddingBottom:15 ,
-        marginBottom:10
+        paddingBottom:20
     },
     gamePurchaseTitle: {
         color: theme.colors[colorScheme].darkgrey,
@@ -244,12 +248,13 @@ const styles = StyleSheet.create({
         paddingHorizontal:16,
         paddingTop:14,
         paddingBottom:14,
-        marginTop:10
+        marginTop:8
     },
     gamePurchaseName: {
         color:theme.colors.white, 
         fontSize:16,
-        fontWeight: "700"
+        fontWeight: "700",
+        marginLeft:5
         },
     gamePurchasePrice: {
         color: theme.colors.white,
@@ -259,7 +264,8 @@ const styles = StyleSheet.create({
     gameNotes: {
         marginLeft:15,
         marginRight:15,   
-        paddingBottom:15
+        paddingBottom:15,
+        borderBottomColor: theme.colors[colorScheme].darkgrey
     },
     gameNotesTitle: {
         color: theme.colors[colorScheme].darkgrey,

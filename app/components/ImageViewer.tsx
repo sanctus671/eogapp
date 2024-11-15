@@ -1,5 +1,8 @@
+
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
-import { View, Image, Modal, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Image, Modal, TouchableOpacity, StyleSheet, Platform, Linking } from 'react-native';
 
 interface ImageViewerProps {
     imageUrl: string;
@@ -11,9 +14,10 @@ interface ImageViewerProps {
 
 const ImageViewer: React.FC<ImageViewerProps>= ({ imageUrl, width, height, style, styleInner }) => {
     const [modalVisible, setModalVisible] = useState(false);
+    const navigation = useNavigation<NativeStackNavigationProp<any>>();
   
     const handleImagePress = () => {
-      setModalVisible(true);
+        navigation.navigate("Image", {image: imageUrl})
     };
   
     const closeModal = () => {

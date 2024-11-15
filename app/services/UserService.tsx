@@ -8,7 +8,7 @@ const API_URL = environment.API_URL;
 
 
 const handleApiError = (error:any) => {
-  console.error('API Error:', error);
+  //console.error('API Error:', error);
   throw error;
 };
 
@@ -26,6 +26,16 @@ export const getUserData = async () => {
   export const updateUser = async (user:any) => {
     try {
       const response = await axios.put(API_URL + '/me', user);
+      return response;
+    } catch (error) {
+      handleApiError(error);
+    }
+  };
+
+
+  export const deleteUser = async () => {
+    try {
+      const response = await axios.delete(API_URL + '/me');
       return response;
     } catch (error) {
       handleApiError(error);
