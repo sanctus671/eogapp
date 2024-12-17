@@ -7,6 +7,7 @@ import { Navigation } from './app/navigation/Navigation';
 import { useEffect, useState } from 'react';
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import { GameOwnershipProvider } from './app/context/GameOwnershipContext';
 
 
 SplashScreen.preventAutoHideAsync();
@@ -38,7 +39,7 @@ export default function App() {
   return (
     <AuthProvider>
       {
-        (appReady ? <Navigation></Navigation> : <Text></Text>)
+        (appReady ? <GameOwnershipProvider><Navigation></Navigation></GameOwnershipProvider> : <Text></Text>)
       }
     </AuthProvider>
   );

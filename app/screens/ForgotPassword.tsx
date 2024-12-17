@@ -33,8 +33,30 @@ const ForgotPassword = () => {
 
     setLoading(false);
 
-    if (result && result.error){
-        setError(result.msg);
+
+    if (result && result.response && result.response.errors){
+
+        let resultText = '';
+        for (const prop in result.response.errors) {
+          if (result.response.errors.hasOwnProperty(prop)) {
+            const errors = result.response.errors[prop];
+            for (const error of errors) {
+              resultText += `${error} `;
+            }
+          }
+        }
+        setError(resultText.trim());
+        return;
+    }
+    else if (result && result.response && result.response.message){
+        
+        setError(result.response.message);
+        return;
+        
+    }
+    else if (result && result.error){
+   
+        setError("Email not found.");
         return;
     }
 

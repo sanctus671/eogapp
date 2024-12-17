@@ -22,7 +22,10 @@ interface SectionData {
     data: { title: string; icon: any; onPress: () => void }[];
 }
 
-
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
 
 const Account = () => {
     const navigation = useNavigation<NativeStackNavigationProp<any>>();
@@ -86,12 +89,24 @@ const Account = () => {
 
     const changePassword = async () => {
         setChangePasswordVisible(false);
-        if (!password || !repeatPassword || password !== repeatPassword){
+        
+        // Check password length first
+        if (!password || password.length < 8) {
+          Toast.show({
+            type: 'error',
+            text1: 'Password must be at least 8 characters long.',
+            position: "bottom",
+            onPress: () => {Toast.hide();setChangePasswordVisible(true)}
+          });
+          return;
+        }
 
+        // Then check password match
+        if (!repeatPassword || password !== repeatPassword) {
           Toast.show({
             type: 'error',
             text1: 'Passwords do not match. Please try again.',
-            position:"bottom",
+            position: "bottom",
             onPress: () => {Toast.hide();setChangePasswordVisible(true)}
           });
           return;
@@ -110,28 +125,42 @@ const Account = () => {
           return;       
         }
 
-  
         Toast.show({
           type: 'success',
           text1: 'Password changed',
           position:"bottom",
           onPress: () => {Toast.hide()}
         });
-      
     }
 
     const changeEmail = async () => {
       setChangeEmailVisible(false);
       
+      if (!email || !isValidEmail(email)) {
+        Toast.show({
+          type: 'error',
+          text1: 'Please enter a valid email address.',
+          position: "bottom",
+          onPress: () => {
+            Toast.hide();
+            setChangeEmailVisible(true);
+          }
+        });
+        return;
+      }
+      
       try {
-        await userService.updateUser({email:email});
+        await userService.updateUser({email: email});
       }
       catch (error) {
         Toast.show({
           type: 'error',
-          text1: 'There was an error updating your email.',
-          position:"bottom",
-          onPress: () => {Toast.hide();setChangePasswordVisible(true)}
+          text1: 'This email is already taken.',
+          position: "bottom",
+          onPress: () => {
+            Toast.hide();
+            setChangeEmailVisible(true);
+          }
         });   
         return;
       }   
@@ -139,15 +168,27 @@ const Account = () => {
       Toast.show({
         type: 'success',
         text1: 'Email changed',
-        position:"bottom",
-        onPress: () => {Toast.hide()}
+        position: "bottom",
+        onPress: () => Toast.hide()
       });
-
     }
 
     const changeName = async () => {
       
       setChangeNameVisible(false);
+      
+      if (!name) {
+        Toast.show({
+          type: 'error',
+          text1: 'Please enter a name.',
+          position: "bottom",
+          onPress: () => {
+            Toast.hide();
+            setChangeEmailVisible(true);
+          }
+        });
+        return;
+      }
 
       try {
         await userService.updateUser({name:name});
@@ -229,7 +270,7 @@ const Account = () => {
         data: [
           { title: 'Unlock', icon: 'lock-open', onPress: () => {
             if (user.premium){
-                Alert.alert("Premium Owned", "You have already purchased premium.")
+                Alert.alert("Subscribed", "You have already subscribed.")
             }
             else{
                 navigation.navigate("Upgrade", {setGameOwned:() => {}});
@@ -295,7 +336,7 @@ const Account = () => {
           <>
 
             <Dialog.Container visible={deleteAccountVisible} onBackdropPress={() => {setDeleteAccountVisible(false)}} onRequestClose={() => {setDeleteAccountVisible(false)}}>
-                <Dialog.Title>Confirm</Dialog.Title>
+                <Dialog.Title style={{color: Platform.OS === "android" ? theme.colors.black : theme.colors[colorScheme].black}}>Confirm</Dialog.Title>
                 <Dialog.Description>
                     You are about to delete your account and all data associated with your account. Do you want to continue?
                 </Dialog.Description>
@@ -305,7 +346,7 @@ const Account = () => {
 
 
               <Dialog.Container visible={changePasswordVisible} onBackdropPress={() => {setChangePasswordVisible(false)}} onRequestClose={() => {setChangePasswordVisible(false)}}>
-                  <Dialog.Title>Change Password</Dialog.Title>
+                  <Dialog.Title style={{color: Platform.OS === "android" ? theme.colors.black : theme.colors[colorScheme].black}}>Change Password</Dialog.Title>
                   <Dialog.Description>
                   Enter your new password below.
                   </Dialog.Description>
@@ -314,16 +355,16 @@ const Account = () => {
                   onChangeText={setPassword}
                   value={password}
                   placeholder="Password"
-                  placeholderTextColor={theme.colors[colorScheme].grey}
-                  style={{ ...styles.textInput}}
+                  placeholderTextColor={Platform.OS === "android" ? theme.colors.black : theme.colors[colorScheme].grey}
+                  style={{ ...styles.textInput, color: Platform.OS === "android" ? theme.colors.black : theme.colors[colorScheme].black}}
                   />    
                   <Dialog.Input
                   secureTextEntry
                   onChangeText={setRepeatPassword}
                   value={repeatPassword}
                   placeholder="Repeat Password"
-                  placeholderTextColor={theme.colors[colorScheme].grey}
-                  style={{ ...styles.textInput}}
+                  placeholderTextColor={Platform.OS === "android" ? theme.colors.black : theme.colors[colorScheme].grey}
+                  style={{ ...styles.textInput, color: Platform.OS === "android" ? theme.colors.black : theme.colors[colorScheme].black}}
                   />    
                   <Dialog.Button color={theme.colors.accent} label="Cancel" onPress={() => {setChangePasswordVisible(false)}} />
                   <Dialog.Button color={theme.colors.accent} label="Change" bold={true} onPress={() => {changePassword()}} />
@@ -331,7 +372,7 @@ const Account = () => {
 
 
               <Dialog.Container visible={changeEmailVisible} onBackdropPress={() => {setChangeEmailVisible(false)}} onRequestClose={() => {setChangeEmailVisible(false)}}>
-                <Dialog.Title>Change Email</Dialog.Title>
+                <Dialog.Title style={{color: Platform.OS === "android" ? theme.colors.black : theme.colors[colorScheme].black}}>Change Email</Dialog.Title>
                 <Dialog.Description>
                 Enter your new email below.
                 </Dialog.Description>
@@ -339,8 +380,8 @@ const Account = () => {
                 onChangeText={setEmail}
                 value={email}
                 placeholder="Email" autoCapitalize="none" clearButtonMode="while-editing" textContentType="emailAddress"   keyboardType="email-address"
-                placeholderTextColor={theme.colors[colorScheme].grey}
-                style={{...styles.textInput}}
+                placeholderTextColor={Platform.OS === "android" ? theme.colors.black : theme.colors[colorScheme].grey}
+                style={{...styles.textInput, color: Platform.OS === "android" ? theme.colors.black : theme.colors[colorScheme].black}}
                 />    
                 <Dialog.Button color={theme.colors.accent} label="Cancel" onPress={() => {setChangeEmailVisible(false)}} />
                 <Dialog.Button color={theme.colors.accent} label="Change" bold={true} onPress={() => {changeEmail()}} />
@@ -349,7 +390,7 @@ const Account = () => {
      
 
               <Dialog.Container visible={changeNameVisible} onBackdropPress={() => {setChangeNameVisible(false)}} onRequestClose={() => {setChangeNameVisible(false)}}>
-                <Dialog.Title>Change Name</Dialog.Title>
+                <Dialog.Title style={{color: Platform.OS === "android" ? theme.colors.black : theme.colors[colorScheme].black}}>Change Name</Dialog.Title>
                 <Dialog.Description>
                 Enter your new name below.
                 </Dialog.Description>
@@ -357,15 +398,15 @@ const Account = () => {
                 onChangeText={setName}
                 value={name}
                 placeholder="Name"  clearButtonMode="while-editing" 
-                placeholderTextColor={theme.colors[colorScheme].grey}
-                style={{...styles.textInput}}
+                placeholderTextColor={Platform.OS === "android" ? theme.colors.black : theme.colors[colorScheme].grey}
+                style={{...styles.textInput, color: Platform.OS === "android" ? theme.colors.black : theme.colors[colorScheme].black}}
                 />    
                 <Dialog.Button color={theme.colors.accent} label="Cancel" onPress={() => {setChangeNameVisible(false)}} />
                 <Dialog.Button color={theme.colors.accent} label="Change" bold={true} onPress={() => {changeName()}} />
               </Dialog.Container> 
 
               <Dialog.Container visible={changeLogoutVisible} onBackdropPress={() => {setChangeLogoutVisible(false)}} onRequestClose={() => {setChangeLogoutVisible(false)}}>
-                <Dialog.Title>Logout</Dialog.Title>
+                <Dialog.Title style={{color: Platform.OS === "android" ? theme.colors.black : theme.colors[colorScheme].black}}>Logout</Dialog.Title>
                 <Dialog.Description>
                 You are about to logout of your account. Are you sure you want to continue?
                 </Dialog.Description>  
@@ -436,6 +477,5 @@ const styles = StyleSheet.create({container: {
         },
         textInput: {
             borderColor:theme.colors[colorScheme].lightgrey, 
-            color: theme.colors[colorScheme].black
         },   
     });

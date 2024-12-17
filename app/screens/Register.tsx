@@ -50,11 +50,26 @@ const Register = () => {
 
     const result = await onRegister!(name, email, password);
 
-    if (result && result.error){
-        setError(result.msg);
-    }
 
-    setLoading(false);
+
+        if (result && result.response && result.response.errors){
+
+            let resultText = '';
+            for (const prop in result.response.errors) {
+                if (result.response.errors.hasOwnProperty(prop)) {
+                const errors = result.response.errors[prop];
+                for (const error of errors) {
+                    resultText += `${error} `;
+                }
+                }
+            }
+            setError(resultText.trim());
+        }
+        else if (result && result.error){
+            setError(result.msg);
+        }
+
+        setLoading(false);
 
   };
 

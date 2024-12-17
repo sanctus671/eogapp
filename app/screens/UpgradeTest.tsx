@@ -16,13 +16,13 @@ import moment from 'moment';
 
 // Mock data and functions to replace react-native-iap
 const mockSubscriptions = [
-  { productId: 'com.tabletopcodex.app.premiummonthly', localizedPrice: '$6.99' },
-  { productId: 'com.tabletopcodex.app.premiumyearly', localizedPrice: '$69.99' }
+  { productId: 'com.tabletopcodex.app.premiummonthly', localizedPrice: '$3.99' },
+  { productId: 'com.tabletopcodex.app.premiumyearly', localizedPrice: '$39.99' }
 ];
 
 const mockTierProducts = [
   { productId: 'com.tabletopcodex.app.tierone', localizedPrice: '$0.99' },
-  { productId: 'com.tabletopcodex.app.tiertwo', localizedPrice: '$1.99' },
+  { productId: 'com.tabletopcodex.app.tiertwo', localizedPrice: '$2.99' },
   { productId: 'com.tabletopcodex.app.tierthree', localizedPrice: '$2.99' }
 ];
 
@@ -174,46 +174,69 @@ const UpgradeTest = ({ navigation }: NavProps) => {
                 {game && game.price_tier ? (
                 <View style={{alignItems:"center"}}>
 
-                    <Text style={[styles.featuresHeaderText, { color: theme.colors.white, marginBottom:15 }]}>
+                    <Text style={[styles.featuresHeaderText, { color: theme.colors.white, marginBottom:5 }]}>
                         Buy this game rulebook now!
                     </Text>
 
-                    <TouchableOpacity activeOpacity={.8} onPress={() => { unlockGame({}) }} style={{ backgroundColor: theme.colors.white, paddingHorizontal: 30, paddingVertical: 12, width: 220, marginTop: 5 }} >
-                    <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: 700, textAlign: 'center' }}>{getTierProductPrice(productIdsMap[game.price_tier as 'tier1' | 'tier2' | 'tier3'])}</Text>
-                    </TouchableOpacity>
-
-
-                    <Text style={[styles.featuresHeaderText, { color: theme.colors.white, marginTop:40, marginBottom:30 }]}>
-                        OR
+                    <Text style={[styles.featuresHeaderSubText, { color: theme.colors.white, marginBottom:15 }]}>
+                        Unlock this one rulebook forever for a one-time cost.
                     </Text>
 
+
+                    <TouchableOpacity activeOpacity={.8} onPress={() => { unlockGame({}) }} style={{ backgroundColor: theme.colors.white, paddingHorizontal: 30, paddingVertical: 12, width: 220, marginTop: 5 }} >
+                    <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: 700, textAlign: 'center' }}>{getTierProductPrice(productIdsMap[game.price_tier as 'tier1' | 'tier2' | 'tier3'])} once</Text>
+                    </TouchableOpacity>
+
+                    <View style={styles.orContainer}>
+                        <View style={styles.line} />
+                        <Text style={styles.orText}>OR</Text>
+                        <View style={styles.line} />
+                    </View>
 
                 </View>
                 ) : null}
                 
                 <View style={{alignItems:"center"}}>
-                    <Text style={[styles.featuresHeaderText, { color: theme.colors.white, marginBottom:15 }]}>
+                    <Text style={[styles.featuresHeaderText, { color: theme.colors.white, marginBottom:5 }]}>
                         Unlock the entire library!
                     </Text>
 
+                    <Text style={[styles.featuresHeaderSubText, { color: theme.colors.white, marginBottom:15 }]}>
+                        Subscribe to unlock all rulebooks. Choose a monthly or yearly subscription.
+                    </Text>
+
+         
                     <TouchableOpacity activeOpacity={.8} onPress={() => { purchaseProduct(productIdsMap['monthly']) }} style={{ backgroundColor: theme.colors.white, paddingHorizontal: 30, paddingVertical: 12, width: 220, marginTop: 5 }} >
                     <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: 700, textAlign: 'center' }}>{getProductPrice(productIdsMap['monthly'])} per month</Text>
                     </TouchableOpacity>
 
 
-                    <View style={{marginTop:20,marginBottom:10}}>
-                        <Text style={styles.annualText}>2 months free with{"\n"}an annual subscription</Text>
-                    </View>
 
 
+                    <View style={{backgroundColor:"#cb5f4c", width:220, paddingHorizontal:10, paddingVertical:5, marginTop:20, marginBottom:5}}>
+                            <Text style={styles.annualText}>Get 2 months free!</Text>
+                        </View>
                     <TouchableOpacity activeOpacity={.8} onPress={() => { purchaseProduct(productIdsMap['yearly']) }} style={{ backgroundColor: theme.colors.white, paddingHorizontal: 30, paddingVertical: 12, width: 220 }} >
-                    <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: 700, textAlign: 'center' }}>{getProductPrice(productIdsMap['yearly'])} per year</Text>
+                        <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: 700, textAlign: 'center' }}>{getProductPrice(productIdsMap['yearly'])} per year</Text>
+
                     </TouchableOpacity>
+
+                    { Platform.OS === "android" ? 
+                    <View style={{marginTop:20,marginBottom:0}}>
+                        <Text style={styles.disclaimerText}>Billing starts at confirmation of purchase. Subscription renews automatically. Cancel via Google Play.</Text>
+                    </View>
+                    : null }
+
 
                 </View>
 
 
                 <View style={[styles.featuresContainer]}>
+
+                    <Text style={[styles.featuresHeaderSubText, { color: theme.colors.white }, {marginBottom:15}]}>
+                        Subscription benefits
+                    </Text>
+
 
                     <View style={styles.featuresIconRow}>
                         <Ionicons name="person-circle-outline" size={34} color={theme.colors.white} />
@@ -270,7 +293,7 @@ const UpgradeTest = ({ navigation }: NavProps) => {
 
       <View style={{ alignItems: "center", justifyContent: "center", marginBottom: 10 + insets.bottom, paddingTop: 10 }}>
         <TouchableOpacity activeOpacity={.8} onPress={() => { navigation.goBack() }}  >
-          <Text style={{ color: theme.colors.accent, fontSize: 14 }}>Not now</Text>
+          <Text style={{ color: theme.colors.accent, fontSize: 14, fontWeight:500 }}>Not now</Text>
         </TouchableOpacity>
       </View>
 
@@ -296,13 +319,19 @@ const styles = StyleSheet.create({
   upgradeContainer: {
     backgroundColor: theme.colors.accent,
     paddingHorizontal: 30,
-    paddingTop: 20,
+    paddingTop: 40,
     paddingBottom: 40,
     justifyContent:'center'
   },
   annualText: {
     fontSize: 14,
     lineHeight: 16,
+    color:theme.colors.white,
+    textAlign:"center"
+  },
+  disclaimerText: {
+    fontSize: 12,
+    lineHeight: 14,
     color:theme.colors.white,
     textAlign:"center"
   },
@@ -340,7 +369,7 @@ const styles = StyleSheet.create({
     fontWeight: "700"
   },
   featuresContainer: {
-    marginTop:5,
+    marginTop:30,
     alignItems:'center'
   },
   featuresHeaderText: {
@@ -348,11 +377,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
+  featuresHeaderSubText: {
+    fontSize: 16,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
   featuresIconRow: {
     flexDirection: "row",
     alignItems: 'center',
     flex: 1,
-    marginTop: 25,
+    marginBottom: 25,
     maxWidth:290,
     paddingHorizontal:10
   },
@@ -362,5 +396,25 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     flex: 1,
     flexWrap: 'wrap'
+  },
+  orContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 40,
+    marginBottom: 30,
+    width:"100%"
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: theme.colors.white,
+    opacity: 0.6
+  },
+  orText: {
+    marginHorizontal: 10,
+    color: theme.colors.white,
+    fontSize: 22,
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });

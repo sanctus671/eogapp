@@ -10,6 +10,7 @@ import FocusAwareStatusBar from '../components/FocusAwareStatusBar';
 import * as gameService from '../services/GameService';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as userService from '../services/UserService';
+import { useGameOwnership } from '../context/GameOwnershipContext';
 
 
 
@@ -24,6 +25,7 @@ const Games = () => {
   const [user, setUser] = useState<any>({});
   const [filteredGames, setFilteredGames] = useState<Array<any>>([]);
   const [loading, setLoading] = useState(true);
+  const { state } = useGameOwnership();
 
 
   const fetchUser = async () => {
@@ -120,7 +122,7 @@ const Games = () => {
             onPress={() => 
             {
   
-                navigation.navigate("Game", {id:item.id, name: item.name, owned:freeGames.includes(item.id) || user.premium || item.purchased})
+                navigation.navigate("Game", {id:item.id, name: item.name, owned:freeGames.includes(item.id) || user.premium || item.purchased || state.ownedGames.has(item.id)})
             }
             
             }>

@@ -7,6 +7,7 @@ import GamePurchase from './GamePurchase';
 import { StatusBar } from 'expo-status-bar';
 import theme from '../../constants/theme';
 import FocusAwareStatusBar from '../../components/FocusAwareStatusBar';
+import { useGameOwnership } from '../../context/GameOwnershipContext';
 const colorScheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
 LogBox.ignoreLogs(['Non-serializable values', 'Task orphaned']);
 
@@ -25,8 +26,18 @@ const Game = ({ navigation }: NavProps) => {
 
     const route = useRoute();
     const { id, name, owned } = route.params as RouteParams;
+    const { state, dispatch } = useGameOwnership();
 
     const [gameOwned, setGameOwned] = useState<boolean>(owned);
+
+/*     useEffect(() => {
+        setGameOwned(state.ownedGames.has(id));
+    }, [state.ownedGames, id]); */
+
+    const toggleGameOwnership = (isOwned: boolean) => {
+        dispatch({ type: 'TOGGLE_OWNERSHIP', gameId: id });
+        setGameOwned(isOwned);
+    };
 
     const windowWidth = Dimensions.get("screen").width;
 
@@ -55,9 +66,9 @@ const Game = ({ navigation }: NavProps) => {
       <KeyboardAvoidingView
       behavior={'height'} style={styles.container}>
         <FocusAwareStatusBar style={(gameOwned ? (colorScheme === "dark" ? "light" : "dark") : colorScheme)} />
-        {(gameOwned ? 
+        {(gameOwned || state.ownedGames.has(id) ? 
           <GameRules id={id}></GameRules> :
-          <GamePurchase id={id} setGameOwned={setGameOwned}></GamePurchase>)}
+          <GamePurchase id={id} setGameOwned={toggleGameOwnership}></GamePurchase>)}
       </KeyboardAvoidingView>
     )
 }

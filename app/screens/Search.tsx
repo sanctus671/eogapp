@@ -10,6 +10,7 @@ import FocusAwareStatusBar from '../components/FocusAwareStatusBar';
 import * as gameService from '../services/GameService';
 import * as userService from '../services/UserService';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useGameOwnership } from '../context/GameOwnershipContext';
 
 
 
@@ -25,6 +26,8 @@ const Search = () => {
   const [user, setUser] = useState<any>({});
   const [filteredGames, setFilteredGames] = useState<Array<any>>([]);
   const [loading, setLoading] = useState(true);
+
+  const { state } = useGameOwnership();
 
   const fetchPosts = async () => {
     try {
@@ -110,7 +113,7 @@ const Search = () => {
         renderItem={({item}) => {
           return (
             <TouchableOpacity style={{...styles.item, height: (segmentIndex === 0 ? getItemHeight() : "auto")}} activeOpacity={.8} 
-            onPress={() => navigation.navigate("Game", {id:item.id, name: item.name, owned:freeGames.includes(item.id) || user.premium || item.purchased})}>
+            onPress={() => navigation.navigate("Game", {id:item.id, name: item.name, owned:freeGames.includes(item.id) || user.premium || item.purchased || state.ownedGames.has(item.id)})}>
               <View style={{...styles.itemImage, display:(segmentIndex === 0 ? "flex" : "none")}} >
                 <ImageBackground source={{ uri: item.banner_image}} resizeMode="cover" style={{...styles.itemImage }}></ImageBackground>
                 <View style={{...styles.itemListOwned, right:15, bottom:15, display: (item.owned ? "flex" : "none")}}>

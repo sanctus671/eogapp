@@ -1,6 +1,6 @@
 import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import { View, Text, Button, TextInput, Platform, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native'
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import Tabs from "./Tabs";
 import Login from "../screens/Login";
@@ -19,16 +19,27 @@ const Stack = createNativeStackNavigator();
 export const Navigation = () => {
   
     const { authState, onRegisterAnonymous } = useAuth();
+    const [isLoading, setIsLoading] = useState(true);
 
+    useEffect(() => {
+        if (authState?.ready) {
+            setIsLoading(false);
+        } else {
+            const timer = setTimeout(() => {
+                setIsLoading(false);
+            }, 10000); // 10 seconds timeout
 
+            return () => clearTimeout(timer);
+        }
+    }, [authState]);
 
-    if (!authState?.ready){
-      return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>)
+    if (isLoading) {
+        return (
+            <View style={styles.container}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+            </View>
+        );
     }
-
 
     const registerAnonymous = async () => {
       const result = await onRegisterAnonymous!();

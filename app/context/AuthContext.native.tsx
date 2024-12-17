@@ -64,7 +64,10 @@ export const AuthProvider = ({children}:any) => {
                     const hasRegistered = await SecureStore.getItemAsync(HAS_REGISTERED_KEY);
 
                     if (!hasRegistered){
-                        await registerAnonymous();
+
+                        const result = await axios.post(`${API_URL}/registeranonymous`, {});
+
+                        storeToken(result.data.authorisation.token);
                     }
                     else{
                         setAuthState(
@@ -127,7 +130,7 @@ export const AuthProvider = ({children}:any) => {
 			
 		} catch(e) {
 			
-			return {error: true, msg: (e as any).message };
+			return {error: true, msg: (e as any).message, response:(e as any).response?.data};
 		}
 		
 	
@@ -140,7 +143,7 @@ export const AuthProvider = ({children}:any) => {
 			return await axios.post(`${API_URL}/recovery`, {email});
 		
 		} catch(e) {
-			return {error: true, msg: (e as any).message };
+			return {error: true, msg: (e as any).message, response:(e as any).response?.data};
 		}
 		
 	
@@ -160,7 +163,7 @@ export const AuthProvider = ({children}:any) => {
 
 		
 		} catch(e) {
-			return {error: true, msg: (e as any).message };
+			return {error: true, msg: (e as any).message, response:(e as any).response?.data};
 		}
 		
 	
