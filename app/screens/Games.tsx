@@ -1,5 +1,5 @@
-import { ActivityIndicator, Appearance, Dimensions, FlatList, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { ActivityIndicator, Appearance, AppState, Dimensions, FlatList, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
 import theme from '../constants/theme';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
@@ -27,6 +27,9 @@ const Games = () => {
   const [loading, setLoading] = useState(true);
   const { state } = useGameOwnership();
 
+  const isFetchingRef = useRef<boolean>(false);
+  const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
+
 
   const fetchUser = async () => {
     const fetchedUser:any = await userService.getUserData();
@@ -35,20 +38,22 @@ const Games = () => {
 
 
   const fetchPosts = async () => {
+    if (isFetchingRef.current) {
+      return;
+    }
+
+    isFetchingRef.current = true;
+
     try {
       const fetchedGames = await gameService.getGames();
       setGames(fetchedGames.data);
-      
       setLoading(false);
-
       setFreeGames(fetchedGames.free);
-
-
-
-
+      setLastFetchTime(Date.now());
     } catch (error) {
-      //console.error('Error fetching posts:', error);
       setLoading(false);
+    } finally {
+      isFetchingRef.current = false;
     }
   };
 
@@ -56,12 +61,31 @@ const Games = () => {
   useFocusEffect(
     React.useCallback(() => {
         fetchPosts();
-      fetchUser();
+        fetchUser();
       return () => {
    
       };
     }, [])
   );
+
+
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active') {
+        const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
+        const currentTime = Date.now();
+        if (!lastFetchTime || (currentTime - lastFetchTime) > oneHour) {
+          fetchPosts();
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      subscription.remove();
+    };
+  }, [lastFetchTime]);
 
   
   

@@ -1,5 +1,5 @@
-import { ActivityIndicator, Appearance, Dimensions, FlatList, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { ActivityIndicator, Appearance, AppState, Dimensions, FlatList, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
 import theme from '../constants/theme';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
@@ -26,10 +26,20 @@ const Search = () => {
   const [user, setUser] = useState<any>({});
   const [filteredGames, setFilteredGames] = useState<Array<any>>([]);
   const [loading, setLoading] = useState(true);
+  const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
 
   const { state } = useGameOwnership();
 
+  const isFetchingRef = useRef<boolean>(false);
+
   const fetchPosts = async () => {
+    if (isFetchingRef.current){
+        return;
+    }
+
+    isFetchingRef.current = true;
+
+
     try {
       const fetchedGames = await gameService.getGames();
       setGames(fetchedGames.data);
@@ -37,6 +47,8 @@ const Search = () => {
 
 
       setFreeGames(fetchedGames.free);
+      setLastFetchTime(Date.now());
+      isFetchingRef.current = false;
 
 
 
@@ -44,6 +56,7 @@ const Search = () => {
     } catch (error) {
       //console.error('Error fetching posts:', error);
       setLoading(false);
+      isFetchingRef.current = false;
     }
   };
 
@@ -63,6 +76,24 @@ const Search = () => {
       };
     }, [])
   );
+
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active') {
+        const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
+        const currentTime = Date.now();
+        if (!lastFetchTime || (currentTime - lastFetchTime) > oneHour) {
+          fetchPosts();
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      subscription.remove();
+    };
+  }, [lastFetchTime]);
   
   useEffect(() => {
     const filterGames = games.filter((item) =>

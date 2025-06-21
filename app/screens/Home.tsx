@@ -21,52 +21,47 @@ const Home = () => {
   const productIdsMap = {'monthly': 'com.tabletopcodex.app.premiummonthly', 'yearly' : 'com.tabletopcodex.app.premiumyearly'}
 	
 
-  const checkForSubscriptionUpdates = async (fetchedUser:any) => {
-	// check if user was subscribed
+  const checkForSubscriptionUpdates = async (fetchedUser: any) => {
+    const currentDate = moment();
+    const oneMonthAgo = moment().subtract(1, 'months'); 
+    const oneYearAgo = moment().subtract(1, 'years'); 
 
-	const currentDate = moment();
-	const oneMonthAgo = moment().subtract(1, 'months');
-	const oneYearAgo = moment().subtract(1, 'years');
-	if (!fetchedUser.premium || (fetchedUser.premium_date && moment(fetchedUser.premium_date).isAfter(oneMonthAgo))) return;
+	if (!fetchedUser.premium || (fetchedUser.premium_date && moment(fetchedUser.premium_date).isAfter(currentDate))) return;
 
-	try {
-	const purchases = await getAvailablePurchases();
-	let foundLevel = "";
-	purchases.forEach(async (purchase) => {
-		if (purchase.productId && productIdsMap["monthly"]){
-			const transactionDate = moment(purchase.transactionDate);
-			if (foundLevel !== "yearly" && transactionDate.isAfter(oneMonthAgo)){
-				foundLevel = "monthly";			
-			}
-		}
-		else if (purchase.productId && productIdsMap["yearly"]){
-			const transactionDate = moment(purchase.transactionDate);
-			if (foundLevel !== "yearly" && transactionDate.isAfter(oneYearAgo)){
-				foundLevel = "yearly";			
-			}
-		}
-	});
+    try {
+        const purchases = await getAvailablePurchases();
+        let foundLevel = "";
 
-	if (foundLevel !== "monthly" && foundLevel !== "yearly"){
-		//downgrade user
-		await userService.updateUser({premium: 0, premium_date: ""});                
-	}
-	else{
-        let updateUser:any = {}
-        updateUser.premium = true;
-        const duration = foundLevel === "monthly" ? "month" : "year";
-        updateUser.premium_date = moment().add("1", duration).format("YYYY-MM-DD");
+        purchases.forEach(async (purchase) => {
+            if (purchase.productId === productIdsMap["monthly"]) {
+                const transactionDate = moment(purchase.transactionDate); 
+                if (foundLevel !== "yearly" && transactionDate.isAfter(oneMonthAgo, "day")) {
+                    foundLevel = "monthly";
+                }
+            } else if (purchase.productId === productIdsMap["yearly"]) {
+                const transactionDate = moment(purchase.transactionDate);
 
+                if (transactionDate.isAfter(oneYearAgo, "day")) {
+                    foundLevel = "yearly";
+                }
+            }
+        })
 
-		await userService.updateUser(updateUser);   
-	}
-
-	} catch (err) {
-	} 
-	}
-
-
-
+        if (foundLevel !== "monthly" && foundLevel !== "yearly") {
+            await userService.updateUser({ premium: 0, premium_date: "" });
+        } else {
+            const duration = foundLevel === "monthly" ? "month" : "year";
+            const updateUser = {
+            premium: true,
+            premium_date: moment().add(1, duration).format("YYYY-MM-DD"),
+            };
+            await userService.updateUser(updateUser);
+        }
+    } catch (err) {
+        //console.error("Error checking subscription updates:", err);
+    }
+    
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
